@@ -43,11 +43,8 @@ static llvm::cl::opt<int> nbodies("n", llvm::cl::desc("Number of bodies"), llvm:
 static llvm::cl::opt<int> ntimesteps("steps", llvm::cl::desc("Number of steps"), llvm::cl::init(1));
 static llvm::cl::opt<int> seed("seed", llvm::cl::desc("Random seed"), llvm::cl::init(7));
 
-
 #include "Point.h"
-
 #include "Octree.h"
-
 #include "BoundingBox.h"
 
 struct Config {
@@ -66,6 +63,16 @@ struct Config {
 
 Config config;
 
+/**
+ * Bitwise stuff
+ * index initial: 000 (em binário)
+ * a.x < b.x:     001
+ * a.y < b.y:     010
+ * a.z < b.z:     100
+ *
+ * For each axis, one of the bits is set to 1 if a < b in that axis
+ * Why? still dont know
+ */
 inline int getIndex(const Point& a, const Point& b) {
   int index = 0;
   if (a.x < b.x)
@@ -77,6 +84,12 @@ inline int getIndex(const Point& a, const Point& b) {
   return index;
 }
 
+/**
+ * Used to move a point by a given space in each axis
+ * Index comes from the getIndex function up there.
+ * 
+ * index is used to know in which direction to update every axis
+ */
 inline void updateCenter(Point& p, int index, double radius) {
   for (int i = 0; i < 3; i++) {
     double v = (index & (1 << i)) > 0 ? radius : -radius;
@@ -87,13 +100,9 @@ inline void updateCenter(Point& p, int index, double radius) {
 typedef std::vector<Body> Bodies;
 
 #include "f_BuildOctree.h"
-
 #include "f_ComputeCenterOfMass.h"
-
 #include "f_ComputeForces.h"
-
 #include "f_AdvanceBodies.h"
-
 #include "f_ReduceBoxes.h"
 
 double nextDouble() {
