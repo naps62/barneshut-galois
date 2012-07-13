@@ -1,3 +1,3 @@
 add_subdirectory(barneshut)
-add_subdirectory(helloworld)
-add_subdirectory(custombarneshut)
+add_subdirectory(blockedbarneshut)
+add_subdirectory(oldbarneshut)
