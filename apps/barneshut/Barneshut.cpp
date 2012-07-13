@@ -171,7 +171,15 @@ void run(int nbodies, int ntimesteps, int seed) {
 
   typedef GaloisRuntime::WorkList::dChunkedLIFO<256> WL;
 
+  //
+  // Main loop
+  //
   for (int step = 0; step < ntimesteps; step++) {
+
+    //
+    // Step 1. Generate a bounding box that contains all points. This is done sequentially
+    //
+
     // Do tree building sequentially
     Galois::setActiveThreads(1);
 
@@ -181,18 +189,35 @@ void run(int nbodies, int ntimesteps, int seed) {
         ReduceBoxes(box));
     OctreeInternal* top = new OctreeInternal(box.center());
 
+    //
+    // Step 2. Build the Octree
+    //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
         BuildOctree(top, box.radius()));
 
+    //
+    // Step 3. Compute center of mass for each point of the tree
+    //
     ComputeCenterOfMass computeCenterOfMass(top);
     computeCenterOfMass();
 
+
+    //
+    // Parallel stuff starts here
+    //
     Galois::StatTimer T_parallel("ParallelTime");
     T_parallel.start();
     Galois::setActiveThreads(numThreads);
 
+    //
+    // Step 4. Compute forces for each body
+    //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
         ComputeForces(top, box.diameter()));
+
+    //
+    // Step 5. Update body positions
+    //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
         AdvanceBodies());
     T_parallel.stop();
