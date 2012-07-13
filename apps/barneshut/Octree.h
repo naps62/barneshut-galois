@@ -1,4 +1,4 @@
-/**
+/** Abstract class for an Octree node.
  * A node in an octree is either an internal node or a body (leaf).
  */
 struct Octree {
@@ -6,6 +6,11 @@ struct Octree {
   virtual bool isLeaf() const = 0;
 };
 
+
+
+/** Internal node in an Octree.
+ * These nodes have pointers for at most 8 other nodes. They also have position and mass.
+ */
 struct OctreeInternal : Octree {
   Octree* child[8];
   Point pos;
@@ -25,6 +30,10 @@ struct OctreeInternal : Octree {
   }
 };
 
+
+/** Leaf node in an Octree. Represents the bodies in the n-body problem.
+ * These nodes have position, velocity, acceleration and mass.
+ */
 struct Body : Octree {
   Point pos;
   Point vel;
@@ -36,6 +45,7 @@ struct Body : Octree {
   }
 };
 
+//  Output operator for the leaf octree nodes.
 std::ostream& operator<<(std::ostream& os, const Body& b) {
   os << "(pos:" << b.pos
      << " vel:" << b.vel
