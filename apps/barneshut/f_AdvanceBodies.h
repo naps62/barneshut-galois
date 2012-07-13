@@ -1,6 +1,6 @@
 struct AdvanceBodies {
   // Optimize runtime for no conflict case
-  typedef int tt_does_not_need_context;
+  typedef int tt_does_not_need_aborts;
 
   AdvanceBodies() { }
 
