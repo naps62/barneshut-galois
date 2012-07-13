@@ -1,3 +1,6 @@
+/** Builds the Octree using recursive calls.
+ * When it finds a leaf, it is replaced by an internal, and both the leaf and the new body are recursively inserted in the new internal.
+ */
 struct BuildOctree {
   // NB: only correct when run sequentially
   typedef int tt_does_not_need_stats;

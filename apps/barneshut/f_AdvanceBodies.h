@@ -1,3 +1,5 @@
+/** Computes the position of a body after a time step.
+ */
 struct AdvanceBodies {
   // Optimize runtime for no conflict case
   typedef int tt_does_not_need_aborts;
