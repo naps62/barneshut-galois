@@ -42,6 +42,7 @@ const char* url = "barneshut";
 static llvm::cl::opt<int> nbodies("n", llvm::cl::desc("Number of bodies"), llvm::cl::init(10000));
 static llvm::cl::opt<int> ntimesteps("steps", llvm::cl::desc("Number of steps"), llvm::cl::init(1));
 static llvm::cl::opt<int> seed("seed", llvm::cl::desc("Random seed"), llvm::cl::init(7));
+static llvm::cl::opt<int> output_final("out", llvm::cl::desc("Output final result"), llvm::cl::init(0));
 
 #include "Point.h"
 #include "Octree.h"
@@ -171,9 +172,10 @@ wrap(Bodies::iterator it) {
 
 void run(int nbodies, int ntimesteps, int seed) {
   Bodies bodies;
+
   generateInput(bodies, nbodies, seed);
 
-  typedef GaloisRuntime::WorkList::dChunkedLIFO<5> WL;
+  typedef GaloisRuntime::WorkList::dChunkedLIFO<256> WL;
 
   //
   // Main loop
@@ -228,6 +230,13 @@ void run(int nbodies, int ntimesteps, int seed) {
       << "Timestep " << step
       << " Center of Mass = " << top->pos << "\n";
     delete top;
+  }
+
+  if (output_final) {
+    std::cout << "Final positions:" << std::endl;
+    for(int i = 0; i < nbodies; ++i) {
+      std::cout << "i, " << bodies[i].pos << std::endl;
+    }
   }
 }
 

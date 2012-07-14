@@ -47,6 +47,15 @@ struct Point {
     z *= value;
     return *this;
   }
+
+  // compute euclidean distance for this point
+  double dist_sq() {
+    return x*x + y*y + z*z;
+  }
+
+  double dist() {
+    return sqrt(dist_sq());
+  }
 };
 
 std::ostream& operator<<(std::ostream& os, const Point& p) {

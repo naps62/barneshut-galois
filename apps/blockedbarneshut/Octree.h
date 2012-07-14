@@ -2,8 +2,13 @@
  * A node in an octree is either an internal node or a body (leaf).
  */
 struct Octree {
+  double mass;
   virtual ~Octree() { }
   virtual bool isLeaf() const = 0;
+
+protected:
+  Octree() : mass(0.0) { }
+  Octree(double _mass) : mass(_mass) { }
 };
 
 
@@ -14,8 +19,7 @@ struct Octree {
 struct OctreeInternal : Octree {
   Octree* child[8];
   Point pos;
-  double mass;
-  OctreeInternal(Point _pos) : pos(_pos), mass(0.0) {
+  OctreeInternal(Point _pos) : pos(_pos) {
     bzero(child, sizeof(*child) * 8);
   }
   virtual ~OctreeInternal() {
@@ -39,7 +43,6 @@ struct Body : Octree {
   Point pos;
   Point vel;
   Point acc;
-  double mass;
   Body() { }
   virtual bool isLeaf() const {
     return true;
