@@ -123,6 +123,8 @@ void generateInput(Bodies& bodies, int nbodies, int seed) {
   double rsc = (3 * PI) / 16;
   double vsc = sqrt(1.0 / rsc);
 
+  int nextId = 0;
+
   for (int body = 0; body < nbodies; body++) {
     double r = 1.0 / sqrt(pow(nextDouble() * 0.999, -2.0 / 3.0) - 1);
     do {
@@ -152,6 +154,8 @@ void generateInput(Bodies& bodies, int nbodies, int seed) {
       b.vel[i] = p[i] * scale;
 
     bodies.push_back(b);
+    b.id = nextId;
+    nextId++;
   }
 }
 
@@ -169,7 +173,7 @@ void run(int nbodies, int ntimesteps, int seed) {
   Bodies bodies;
   generateInput(bodies, nbodies, seed);
 
-  typedef GaloisRuntime::WorkList::dChunkedLIFO<256> WL;
+  typedef GaloisRuntime::WorkList::dChunkedLIFO<5> WL;
 
   //
   // Main loop

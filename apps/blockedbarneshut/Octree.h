@@ -35,6 +35,7 @@ struct OctreeInternal : Octree {
  * These nodes have position, velocity, acceleration and mass.
  */
 struct Body : Octree {
+  int id;
   Point pos;
   Point vel;
   Point acc;

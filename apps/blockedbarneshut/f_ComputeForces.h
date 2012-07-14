@@ -25,6 +25,8 @@ struct ComputeForces {
   void operator()(Body* bb, Context&) {
     Body& b = *bb;
 
+    std::cout << "computeForce," << GaloisRuntime::LL::TID << "," << b.id << std::endl;
+
     // backup previous acceleration, and initialize new accel to 0
     Point p = b.acc;
     for (int i = 0; i < 3; i++)
