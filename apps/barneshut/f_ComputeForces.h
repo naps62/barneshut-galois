@@ -80,6 +80,7 @@ struct ComputeForces {
       Frame f = stack.back();
       stack.pop_back();
 
+      // compute distance of that node to the point
       for (int i = 0; i < 3; i++)
         p[i] = f.node->pos[i] - b.pos[i];
 

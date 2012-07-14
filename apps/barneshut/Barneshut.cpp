@@ -174,6 +174,7 @@ void run(int nbodies, int ntimesteps, int seed) {
   //
   // Main loop
   //
+  cout << ntimesteps << endl;
   for (int step = 0; step < ntimesteps; step++) {
 
     //
