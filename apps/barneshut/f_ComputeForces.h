@@ -115,7 +115,7 @@ struct ComputeForces {
     }
   }
 
-  void recurse(Body& b, OctreeInternal* node, double dsq) {
+  /*void recurse(Body& b, OctreeInternal* node, double dsq) {
     Point p;
 
     for (int i = 0; i < 3; i++)
@@ -148,5 +148,5 @@ struct ComputeForces {
         recurse(b, static_cast<OctreeInternal*>(next), dsq);
       }
     }
-  }
+  }*/
 };
