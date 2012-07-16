@@ -1,3 +1,3 @@
 add_subdirectory(barneshut)
-add_subdirectory(blockedbarneshut)
+add_subdirectory(cleanbarneshut)
 add_subdirectory(oldbarneshut)

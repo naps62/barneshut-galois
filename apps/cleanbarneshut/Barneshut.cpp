@@ -24,6 +24,7 @@
 #include <limits>
 #include <iostream>
 #include <vector>
+#include <stack>
 #include <strings.h>
 #include <boost/math/constants/constants.hpp>
 #include <boost/iterator/transform_iterator.hpp>
@@ -103,6 +104,7 @@ typedef std::vector<Body> Bodies;
 #include "f_BuildOctree.h"
 #include "f_ComputeCenterOfMass.h"
 #include "f_ComputeForces.h"
+#include "f_CleanComputeForces.h"
 #include "f_AdvanceBodies.h"
 #include "f_ReduceBoxes.h"
 
@@ -217,7 +219,7 @@ void run(int nbodies, int ntimesteps, int seed) {
     // Step 4. Compute forces for each body
     //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
-        ComputeForces(top, box.diameter()));
+        CleanComputeForces(top, box.diameter()));
 
     //
     // Step 5. Update body positions
@@ -235,7 +237,7 @@ void run(int nbodies, int ntimesteps, int seed) {
   if (output_final) {
     std::cout << "Final positions:" << std::endl;
     for(int i = 0; i < nbodies; ++i) {
-      std::cout << "i, " << bodies[i].pos << std::endl;
+      std::cout << i << ", " << bodies[i].pos << std::endl;
     }
   }
 }

@@ -3,6 +3,7 @@
  */
 struct Octree {
   double mass;
+  Point pos;
   virtual ~Octree() { }
   virtual bool isLeaf() const = 0;
 
@@ -40,7 +41,6 @@ struct OctreeInternal : Octree {
  */
 struct Body : Octree {
   int id;
-  Point pos;
   Point vel;
   Point acc;
   Body() { }

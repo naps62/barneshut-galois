@@ -6,7 +6,7 @@ struct CleanComputeForces {
 	struct Frame {
 		double dist_sq;
 		OctreeInternal* node;
-		Frame(OctreeInternal* _node, double _dist_sq) : dsq(_dsq), node(_node) { }
+		Frame(OctreeInternal* _node, double _dist_sq) : dist_sq(_dist_sq), node(_node) { }
 	};
 
 	OctreeInternal* top;
@@ -44,11 +44,11 @@ struct CleanComputeForces {
 	void iterate(Body& body, double root_dsq) {
 		// init work stack with top body
 		std::stack<Frame> frame_stack;
-		stack.push_back(Frame(top, root_dsq));
+		frame_stack.push(Frame(top, root_dsq));
 
 		Point pos_diff;
 
-		while(!stack.emtpy()) {
+		while(!frame_stack.empty()) {
 			Frame f = frame_stack.top();
 			frame_stack.pop();
 
@@ -57,14 +57,10 @@ struct CleanComputeForces {
 
 			if (dist_sq >= f.dist_sq) {
 				handleInteraction(body, f.node, dist_sq, pos_diff);
-				//double scale = computeScale(pos_sq, f.node->mass);
-				//for(int i = 0; i < 3; ++i)
-				//	body.acc[i] += pos_diff[i] * scale;
-
 				continue;
 			}
 
-			double dist_sq = f.dist_sq * 0.25;
+			dist_sq = f.dist_sq * 0.25;
 
 			for(int i = 0; i < 8; ++i) {
 				Octree* next = f.node->child[i];
@@ -73,11 +69,13 @@ struct CleanComputeForces {
 
 				if (next->isLeaf()) {
 					// Check if it is me
-					if (&b != next) {
-						recurse(b, static_cast<Body*>(next), dist_sq);
+					if (&body != next) {
+						computePosDiff(body, next, pos_diff);
+						double new_dist_sq = pos_diff.dist_sq();
+						handleInteraction(body, next, new_dist_sq, pos_diff);
 					}
 				} else {
-					stack.push_back(Frame(static_cast<OctreeInternal*>(next), dsq));
+					frame_stack.push(Frame(static_cast<OctreeInternal*>(next), dist_sq));
 				}
 			}
 		}
@@ -87,27 +85,15 @@ struct CleanComputeForces {
 		void handleInteraction(Body& body, Octree* node, double dist_sq, Point& pos_diff) {
 			dist_sq += config.epssq;
 			double idr = 1 / sqrt(dist_sq);
-			double nphi = mass * idr;
-			double scale = nhpi * idr * idr;
+			double nphi = node->mass * idr;
+			double scale = nphi * idr * idr;
 
 			for(int i = 0; i < 3; ++i)
 				body.acc[i] += pos_diff[i] * scale;
 		}
 
-		void computePosDiff(Body& body, OctreeInternal* node, Point& result) {
+		void computePosDiff(Body& body, Octree* node, Point& result) {
 			for(int i = 0; i < 3; ++i)
 				result[i] = node->pos[i] - body.pos[i];
 		}
-
-		void recurse(Body& body, Body* node, double dist_sq) {
-
-			// compute distance between current point and tree leaf (the other point)
-			// contribution of each node is given by (1/euclidean_distance^3)
-
-			Point pos_diff;
-			computePosDiff(body, node, pos_diff);
-			double dist_sq = pos_diff.dist_sq();
-
-			handleInteraction(body, node, dist_sq, pos_diff);
-		}
-}
+};
