@@ -177,6 +177,10 @@ void run(int nbodies, int ntimesteps, int seed) {
 
   generateInput(bodies, nbodies, seed);
 
+  //  spatial sorting
+  SpatialBodySortingTraits sst;
+  CGAL::spatial_sort(bodies.begin(), bodies.end(), sst);
+
   typedef GaloisRuntime::WorkList::dChunkedLIFO<256> WL;
 
   //
