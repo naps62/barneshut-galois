@@ -9,3 +9,5 @@ rls/*
 dbg/*
 default/*
 inputs/*
+
+build/rls
