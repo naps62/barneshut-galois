@@ -219,7 +219,7 @@ void run(int nbodies, int ntimesteps, int seed) {
     // Step 0.2. BodyBlocks build
     //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
-        BodyBlocksBuild(&body_blocks, 4));
+        BodyBlocksBuild(&body_blocks, block_size));
 
     //
     // Step 1. Generate a bounding box that contains all points. This is done sequentially
