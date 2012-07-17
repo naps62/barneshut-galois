@@ -34,6 +34,8 @@
 #include "Lonestar/BoilerPlate.h"
 #include <CGAL/spatial_sort.h>
 
+#include <CGAL/spatial_sort.h>
+
 namespace {
 const char* name = "Barnshut N-Body Simulator";
 const char* desc =

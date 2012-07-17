@@ -11,3 +11,4 @@ default/*
 inputs/*
 
 build/rls
+build/*.eps
