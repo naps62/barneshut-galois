@@ -30,13 +30,11 @@ struct BlockedComputeForces {
 	void operator()(BodiesPtr** bb, Context&) {
 		BodiesPtr& bodies = **bb;
 		uint bsize = bodies.size();
-		std::cout << "here" << bsize << std::endl;
 		// backup previous acceleration and initialize new accel to 0
 		Point acc[bsize];
 		for(uint j = 0; j < bsize; ++j) {
 			Body& body = *bodies[j];
 
-			std::cout << "ini " << body.id << " " << body.pos << std::endl;
 			acc[j] = body.acc;
 
 			for(int i = 0; i < 3; ++i)
@@ -52,7 +50,6 @@ struct BlockedComputeForces {
 			Body& body = *bodies[j];
 			for(int i = 0; i < 3; ++i)
 				body.vel[i] += (body.acc[i] - acc[j][i]) * config.dthf;
-			//std::cout << "end " << bodies[j].id << " " << bodies[j].vel << std::endl;
 		}
 	}
 
@@ -102,7 +99,6 @@ struct BlockedComputeForces {
 
 	private:
 		void handleInteraction(Body& body, Octree* node, double dist_sq, Point& pos_diff) {
-			std::cout << "using body at " << &body << std::endl;
 			dist_sq += config.epssq;
 			double idr = 1 / sqrt(dist_sq);
 			double nphi = node->mass * idr;
