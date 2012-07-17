@@ -264,7 +264,7 @@ void run(int nbodies, int ntimesteps, int seed) {
     //Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
     //    CleanComputeForces(top, box.diameter()));
     Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()),
-          BlockedComputeForces(top, box.diameter()));
+          CleanComputeForces(top, box.diameter()));
 
     //
     // Step 5. Update body positions
