@@ -35,7 +35,6 @@ struct OctreeInternal : Octree {
   }
 };
 
-
 /** Leaf node in an Octree. Represents the bodies in the n-body problem.
  * These nodes have position, velocity, acceleration and mass.
  */
@@ -47,6 +46,7 @@ struct Body : Octree {
   virtual bool isLeaf() const {
     return true;
   }
+
 };
 
 //  Output operator for the leaf octree nodes.

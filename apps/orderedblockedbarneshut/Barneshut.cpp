@@ -45,6 +45,7 @@ static llvm::cl::opt<int> nbodies("n", llvm::cl::desc("Number of bodies"), llvm:
 static llvm::cl::opt<int> ntimesteps("steps", llvm::cl::desc("Number of steps"), llvm::cl::init(1));
 static llvm::cl::opt<int> seed("seed", llvm::cl::desc("Random seed"), llvm::cl::init(7));
 static llvm::cl::opt<int> output_final("out", llvm::cl::desc("Output final result"), llvm::cl::init(0));
+static llvm::cl::opt<int> block_size("b", llvm::cl::desc("Block Size"), llvm::cl::init(4));
 
 #include "Point.h"
 #include "Octree.h"
@@ -218,7 +219,7 @@ void run(int nbodies, int ntimesteps, int seed) {
     // Step 0.2. BodyBlocks build
     //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
-        BodyBlocksBuild(&body_blocks, 1));
+        BodyBlocksBuild(&body_blocks, 4));
 
     //
     // Step 1. Generate a bounding box that contains all points. This is done sequentially
