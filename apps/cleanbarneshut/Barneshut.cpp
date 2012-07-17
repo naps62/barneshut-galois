@@ -158,7 +158,6 @@ void generateInput(Bodies& bodies, int nbodies, int seed) {
       b.vel[i] = p[i] * scale;
 
     bodies.push_back(b);
-    std::cout << "created body at " << &bodies.back() << std::endl;
     b.id = nextId;
     nextId++;
   }

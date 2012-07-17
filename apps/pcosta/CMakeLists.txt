@@ -1,8 +1,6 @@
-#include_directories(/workspace/pcosta/local/include)
-#app(pcosta Barneshut.cpp EXTLIBS /workspace/pcosta/local/lib/libCGAL.so)
 site_name(host)
-string(COMPARE NOTEQUAL host 'naps62-mint' result)
-if (NOT result)
+if (NOT host STREQUAL "naps62-mint")
 	include_directories(/workspace/pcosta/local/include)
-endif (NOT result)
+endif()
+
 app(pcosta Barneshut.cpp)
