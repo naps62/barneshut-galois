@@ -30,7 +30,6 @@ struct CleanComputeForces {
 		Point acc = body.acc;
 		for(int i = 0; i < 3; ++i)
 			body.acc[i] = 0;
-		std::cout << "ini " << body.id << " " << body.pos << std::endl;
 
 		// compute acceleration for this body
 		iterate(body, root_dsq);
@@ -40,7 +39,6 @@ struct CleanComputeForces {
 			body.vel[i] += (body.acc[i] - acc[i]) * config.dthf;
 	}
 
-	
 
 	void iterate(Body& body, double root_dsq) {
 		// init work stack with top body
@@ -84,7 +82,6 @@ struct CleanComputeForces {
 
 	private:
 		void handleInteraction(Body& body, Octree* node, double dist_sq, Point& pos_diff) {
-			std::cout << "using body at " << &body << std::endl;
 			dist_sq += config.epssq;
 			double idr = 1 / sqrt(dist_sq);
 			double nphi = node->mass * idr;

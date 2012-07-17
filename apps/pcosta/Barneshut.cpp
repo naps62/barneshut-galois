@@ -32,6 +32,7 @@
 #include "Galois/Statistic.h"
 #include "llvm/Support/CommandLine.h"
 #include "Lonestar/BoilerPlate.h"
+#include <CGAL/spatial_sort.h>
 
 #include <CGAL/spatial_sort.h>
 
