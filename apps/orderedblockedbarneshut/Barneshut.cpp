@@ -192,6 +192,7 @@ wrap(BodyBlocks::iterator it) {
 void run(int nbodies, int ntimesteps, int seed) {
   Bodies bodies;
   BodyBlocks body_blocks;
+  SpatialBodySortingTraits sst;
 
   generateInput(bodies, nbodies, seed);
   /*for(int i = 0; i < nbodies; ++i)
@@ -211,7 +212,7 @@ void run(int nbodies, int ntimesteps, int seed) {
     //
     // Step 0.1. Body ordering goes here
     // 
-    /** TODO */
+    CGAL::spatial_sort(bodies.begin(), bodies.end(), sst);
 
     //
     // Step 0.2. BodyBlocks build
