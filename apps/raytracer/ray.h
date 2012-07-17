@@ -1,5 +1,8 @@
+ /**
+  * A single ray
+  */
  struct Ray {
-	 Vec o, d;
+	 Vec orig, dest;
 
-	 Ray(Vec o_, Vec d_) : o(o_), d(d_) {}
+	 Ray(Vec _orig, Vec _dest) : orig(_orig), dest(_dest) { }
  }; 
