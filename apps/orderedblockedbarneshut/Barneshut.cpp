@@ -277,6 +277,8 @@ void run(int nbodies, int ntimesteps, int seed) {
     std::cout 
       << "Timestep " << step
       << " Center of Mass = " << top->pos << "\n";
+    std::cout
+      << "Time measured: " << T_parallel.get_usec() << std::endl;
     delete top;
   }
 
