@@ -3,4 +3,4 @@ if (NOT host STREQUAL "naps62-mint")
 	include_directories(/workspace/pcosta/local/include)
 endif()
 
-app(pcosta Barneshut.cpp)
+app(orderedblockedbarneshut Barneshut.cpp)

@@ -32,6 +32,7 @@
 #include "Galois/Statistic.h"
 #include "llvm/Support/CommandLine.h"
 #include "Lonestar/BoilerPlate.h"
+#include <CGAL/spatial_sort.h>
 
 namespace {
 const char* name = "Barnshut N-Body Simulator";
@@ -44,6 +45,7 @@ static llvm::cl::opt<int> nbodies("n", llvm::cl::desc("Number of bodies"), llvm:
 static llvm::cl::opt<int> ntimesteps("steps", llvm::cl::desc("Number of steps"), llvm::cl::init(1));
 static llvm::cl::opt<int> seed("seed", llvm::cl::desc("Random seed"), llvm::cl::init(7));
 static llvm::cl::opt<int> output_final("out", llvm::cl::desc("Output final result"), llvm::cl::init(0));
+static llvm::cl::opt<int> block_size("b", llvm::cl::desc("Block Size"), llvm::cl::init(4));
 
 #include "Point.h"
 #include "Octree.h"
@@ -99,13 +101,18 @@ inline void updateCenter(Point& p, int index, double radius) {
   }
 }
 
-typedef std::vector<Body> Bodies;
+typedef std::vector<Body>   Bodies;
+
+typedef std::vector<Body*>  BodiesPtr;
+typedef std::vector<BodiesPtr*> BodyBlocks;
 
 #include "f_BuildOctree.h"
 #include "f_ComputeCenterOfMass.h"
-/** Compute Forces was replaced with CleanComputeForces */
-#include "f_ComputeForces.h"
+/** Build blocks of bodies */
+#include "f_BodyBlocksBuild.h"
+/** Compute Forces was replaced with CleanComputeForces, and later with BlockedComputeForces */
 #include "f_CleanComputeForces.h"
+#include "f_BlockedComputeForces.h"
 #include "f_AdvanceBodies.h"
 #include "f_ReduceBoxes.h"
 
@@ -163,6 +170,11 @@ void generateInput(Bodies& bodies, int nbodies, int seed) {
   }
 }
 
+void pointBlockInput(Bodies& bodies, BodyBlocks& body_blocks, int block_size) {
+  body_blocks.clear();
+}
+
+
 template<typename T>
 struct Deref : public std::unary_function<T, T*> {
   T* operator()(T& item) const { return &item; }
@@ -173,10 +185,19 @@ wrap(Bodies::iterator it) {
   return boost::make_transform_iterator(it, Deref<Body>());
 }
 
+boost::transform_iterator<Deref<BodiesPtr*>, BodyBlocks::iterator>
+wrap(BodyBlocks::iterator it) {
+  return boost::make_transform_iterator(it, Deref<BodiesPtr*>());
+}
+
 void run(int nbodies, int ntimesteps, int seed) {
   Bodies bodies;
+  BodyBlocks body_blocks;
+  SpatialBodySortingTraits sst;
 
   generateInput(bodies, nbodies, seed);
+  /*for(int i = 0; i < nbodies; ++i)
+    std::cout << "body " << i << " " << bodies[i] << std::endl;*/
 
   typedef GaloisRuntime::WorkList::dChunkedLIFO<256> WL;
 
@@ -185,13 +206,24 @@ void run(int nbodies, int ntimesteps, int seed) {
   //
   for (int step = 0; step < ntimesteps; step++) {
 
-    //
-    // Step 1. Generate a bounding box that contains all points. This is done sequentially
-    //
 
     // Do tree building sequentially
     Galois::setActiveThreads(1);
 
+    //
+    // Step 0.1. Body ordering goes here
+    // 
+    CGAL::spatial_sort(bodies.begin(), bodies.end(), sst);
+
+    //
+    // Step 0.2. BodyBlocks build
+    //
+    Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
+        BodyBlocksBuild(&body_blocks, block_size));
+
+    //
+    // Step 1. Generate a bounding box that contains all points. This is done sequentially
+    //
     BoundingBox box;
     ReduceBoxes reduceBoxes(box);
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
@@ -204,12 +236,23 @@ void run(int nbodies, int ntimesteps, int seed) {
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
         BuildOctree(top, box.radius()));
 
+
     //
     // Step 3. Compute center of mass for each point of the tree
     //
     ComputeCenterOfMass computeCenterOfMass(top);
     computeCenterOfMass();
 
+    /*for(int i = 0; i < nbodies; ++i)
+      std::cout << "body " << i << " " << &bodies[i] << std::endl;
+
+    for(uint i = 0; i < body_blocks.size(); ++i)
+      for(uint j = 0; j < body_blocks[j].size(); ++j)
+        std::cout << "body " << i << " in block " << j << " " << &body_blocks[i][j] << std::endl;
+
+      std::cout << "body 0 in node " << 0 << " " << top->child[0] << std::endl;
+      std::cout << "body 1 in node " << 1 << " " << top->child[1] << std::endl;
+*/
 
     // Parallel stuff starts here
     Galois::StatTimer T_parallel("ParallelTime");
@@ -221,6 +264,8 @@ void run(int nbodies, int ntimesteps, int seed) {
     //
     Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
         CleanComputeForces(top, box.diameter()));
+    //Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()),
+    //      BlockedComputeForces(top, box.diameter()));
 
     //
     // Step 5. Update body positions
@@ -238,7 +283,7 @@ void run(int nbodies, int ntimesteps, int seed) {
   }
 
   if (output_final) {
-    std::cout << "Final positions:" << std::endl;
+    std::cout << std::endl << "Final positions:" << std::endl;
     for(int i = 0; i < nbodies; ++i) {
       std::cout << i << ", " << bodies[i].pos << std::endl;
     }
