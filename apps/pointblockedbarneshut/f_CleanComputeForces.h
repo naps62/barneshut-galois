@@ -39,7 +39,6 @@ struct CleanComputeForces {
 			body.vel[i] += (body.acc[i] - acc[i]) * config.dthf;
 	}
 
-	
 
 	void iterate(Body& body, double root_dsq) {
 		// init work stack with top body
