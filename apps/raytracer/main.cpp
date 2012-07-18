@@ -118,13 +118,28 @@ static llvm::cl::opt<unsigned> spp   ("spp", llvm::cl::desc("Samples per pixel")
 int main(int argc, char *argv[]) {
 	llvm::cl::ParseCommandLineOptions(argc, argv);
 
+	/**	Field of View angle (x,y)
+	 * Assume the same values for horizontal and vertical angle to achieve squared near and far planes.
+	 */	
+	double fov_angle[2] = {.5135,.5135};
+
 	//TODO: esta merda assim é um nojo, raio de valores mais aleatórios
 
 	// cam pos, lookAt 
 	Ray cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm());
 
-	Vec cx = Vec(width * 0.5135 / height);
-	Vec cy = (cx % cam.dest).norm() * .5135;
+	//	camera right vector
+	Vec cx = Vec(width * fov_angle[0] / height);
+
+	//	camera up vector, given by the cross product of the right vector and the lookAt direction
+	Vec cy = (cx % cam.dest).norm() * fov_angle[1];
+
+	//	NOTE: this is a strange camera coordinate system.
+	//	I would expect the lookAt vector to be inverted, in order to achieve the standard OpenGL camera coordinate system
+	//	where the Z points away from the frustum.
+
+
+	
 	Vec r;
 	vector<Vec> img(width * height);// = new Vec[width * height];
 	//Scene scene(width, height, Vec()/*TODO falta isto*/);
