@@ -38,7 +38,7 @@ struct Sphere : public Object {
 		Vec op = pos - r.orig; 
 		double t;
 		double eps = 1e-4;
-		double b   = op.dot(r.dest);
+		double b   = op.dot(r.dir);
 		double det = (b * b) - op.dot(op) + (rad * rad); 
 
 		if (det < 0)
