@@ -66,8 +66,10 @@ struct Scene {
 				}
 			}
 		} 
+		cerr << endl;
 	}
 
+	/** save image to file */
 	void save(const string &file) {
 		ofstream fs(file);
 		fs << "P3" << endl << width << " " << height << "\n" << 255 << endl;
@@ -123,76 +125,85 @@ struct Scene {
 
 		// the hit object 
 		const Sphere &obj = objects[id];
-
-		Vec hit_point = r.orig + r.dir * dist;
-		Vec norm      = (hit_point - obj.pos).norm();
-		Vec nl        = norm.dot(r.dir) < 0 ? norm : (norm * -1);
 		Vec f         = obj.color;
 
-		// max refl
-		double p = (f.x > f.y) && (f.x > f.z ? f.x : f.y > f.z ? f.y : f.z);
-
-		//R.R.
+		//Russian Roullete to stop
 		if (++depth > 5) {
-			if (erand48(Xi) < p)
-				f = f * (1/p);
+			// max refl
+			double max_refl = obj.color.max_coord();
+			if (erand48(Xi) < max_refl)
+				f = f * (1 / max_refl);
 			else
 				return obj.emission; 
 		}
 
-		
+
+		Vec hit_point = r.orig + r.dir * dist;
+		Vec norm      = (hit_point - obj.pos).norm();
+		Vec nl        = norm.dot(r.dir) < 0 ? norm : (norm * -1);
+
 		switch(obj.refl) {
 			// Ideal DIFFUSE reflection
 			case DIFF: {
 				double r1  = 2 * M_PI * erand48(Xi);
 				double r2  = erand48(Xi);
-				double r2s = sqrt(r2); 
+				double r2s = sqrt(r2);
 
-				Vec w = nl;
-				Vec u = ((fabs(w.x) > 0.1 ? Vec(0, 1) : Vec(1)) % w).norm();
-				Vec v = w % u; 
-				Vec d = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm(); 
+				Vec w   = nl;
+				Vec u   = ((fabs(w.x) > 0.1 ? Vec(0, 1) : Vec(1)) % w).norm();
+				Vec v   = w % u;
+				Vec dir = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm(); 
 
-				return obj.emission + f.mult(radiance(Ray(hit_point, d), depth, Xi)); 
+				Ray diffuse_ray(hit_point, dir);
+				return obj.emission + f.mult(radiance(diffuse_ray, depth, Xi)); 
+				break;
 			}
 
 			// Ideal SPECULAR reflection
 			case SPEC: {
 				Ray specular_ray(hit_point,r.dir - norm * 2 * norm.dot(r.dir));
 				return obj.emission + f.mult(radiance(specular_ray, depth, Xi));
+				break;
 			}
 
 			// Ideal dielectric REFRACTION
 			case REFR:
 			default: {
 				Ray reflRay(hit_point, r.dir - norm * 2 * norm.dot(r.dir));
-				// Ray from outside going in? 
-				bool into  = norm.dot(nl) > 0;
-				double nc  = 1;
-				double nt  = 1.5;
-				double nnt = into ? nc / nt : nt / nc;
-				double ddn = r.dir.dot(nl);
-				double cos2t; 
+				// Ray from outside going in?
+				bool into    = norm.dot(nl) > 0;
+				double nc    = 1, nt  = 1.5;
+				double nnt   = into ? nc / nt : nt / nc;
+				double ddn   = r.dir.dot(nl);
+				double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
 
 				// Total internal reflection
-				if ( (cos2t = 1 - nnt * nnt * (1 - ddn * ddn)) < 0)
-					return obj.emission + f.mult(radiance(reflRay, depth, Xi)); 
+				if (cos2t < 0) {
+					return obj.emission + f.mult(radiance(reflRay, depth, Xi));
+				} else {
+					Vec tdir = (r.dir * nnt - norm * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)) )).norm();
+					double a = nt - nc;
+					double b = nt + nc;
+					double R0 = a * a / (b * b);
+					double c = 1 - (into ? -ddn : tdir.dot(norm));
+					double Re = R0 + (1 - R0) * c * c * c * c * c;
+					double Tr = 1 - Re;
+					double P = 0.25 + 0.5 * Re;
+					double RP = Re / P;
+					double TP = Tr / (1 - P); 
 
-				Vec tdir = (r.dir * nnt - norm * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)) )).norm(); 
-				double a = nt - nc;
-				double b = nt + nc;
-				double R0 = a * a / (b * b);
-				double c = 1 - (into ? -ddn : tdir.dot(norm)); 
-				double Re = R0 + (1 - R0) * c * c * c * c * c;
-				double Tr = 1 - Re;
-				double P = .25 + .5 * Re;
-				double RP = Re / P;
-				double TP = Tr / (1 - P); 
+					// Russian roulette 
+					Ray refrRay(hit_point, tdir);
+					Vec refrResult;
 
-				// Russian roulette 
-				return obj.emission + f.mult(depth > 2 ? (erand48(Xi) < P ?   
-						radiance(reflRay, depth, Xi) * RP : radiance(Ray(hit_point,tdir), depth, Xi) * TP) : 
-						radiance(reflRay, depth, Xi) * Re + radiance(Ray(hit_point,tdir), depth, Xi) * Tr); 
+					if (depth > 2) { // if ray is deep enough, consider only one of the contributions
+						if (erand48(Xi) < P) refrResult = radiance(reflRay, depth, Xi) * RP;
+						else                 refrResult = radiance(refrRay, depth, Xi) * TP;
+					} else { // otherwise, sum both
+						refrResult = radiance(reflRay, depth, Xi) * Re + radiance(refrRay, depth, Xi) * Tr;
+					}
+					return obj.emission + f.mult(refrResult); 
+				}
 			}
 		}
 	}

@@ -60,6 +60,10 @@ struct Vec {
 	double dot(const Vec &b) const {
 		return x * b.x + y * b.y + z * b.z;
 	}
+
+	double max_coord() const {
+		return max(x, max(y, z));
+	}
 }; 
 
 std::ostream& operator<<(std::ostream& os, const Vec& p) {
