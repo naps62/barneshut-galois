@@ -1,6 +1,13 @@
 #include <math.h>   // smallpt, a Path Tracer by Kevin Beason, 2008 
 #include <stdlib.h> // Make : g++ -O3 -fopenmp smallpt.cpp -o smallpt 
 #include <stdio.h>  //        Remove "-fopenmp" for g++ version < 4.2 
+#include <assert.h>
+#include <iostream>
+using namespace std;
+
+#include "vec.h"
+#include "ray.h"
+#include "object.h"
 
 // Usage: time ./smallpt 5000 && xv image.ppm
 
@@ -29,7 +36,7 @@ inline int toInt(double x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); }
 
 inline bool intersect(const Ray &r, double &t, int &id){ 
 	double n = sizeof(spheres) / sizeof(Sphere), d, inf = t = 1e20; 
-	for (int i = int(n); i--)
+	for (int i = int(n); i--;)
 		if( (d = spheres[i].intersect(r)) && d < t){
 			t = d;
 			id = i;
@@ -41,8 +48,6 @@ inline bool intersect(const Ray &r, double &t, int &id){
 /***********************************************************
  * RADIANCE
  */
-
-enum Refl_t { DIFF, SPEC, REFR };  // material types, used in radiance() 
 
 Vec radiance(const Ray &r, int depth, unsigned short *Xi){ 
 	double t;                               // distance to intersection 

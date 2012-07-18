@@ -4,7 +4,7 @@ enum Obj_t  { SPHERE, BOX };
 /** generic object */
 struct Object {
 	// position, emission and color of the object
-	Vec pos, emission, color
+	Vec pos, emission, color;
 
 	// reflection type (DIFFuse, SPECular, REFRactive)
 	Refl_t refl;
@@ -27,6 +27,10 @@ struct Sphere : Object {
 	// radius of the sphere
 	double rad;
 
+	/** Constructor */
+	Sphere(double _rad, Vec _pos, Vec _emission, Vec _color, Refl_t _refl) :
+		Object(_pos, _emission, _color, _refl), rad(_rad) { }
+
 	/** Other */
 	double intersect(const Ray& r) const {
 
@@ -45,7 +49,7 @@ struct Sphere : Object {
 		return (t = b - det) > eps ? t : ((t = b + det) > eps ? t : 0); 
 	}
 
-	Obj_t type() {
+	Obj_t type() const {
 		return SPHERE;
 	}
 };

@@ -34,12 +34,12 @@ struct Vec {
 		abort();
 	}
 
-	bool operator==(const Point& other) const { return (x == other.x && y == other.y && z == other.z); }
-	bool operator!=(const Point& other) const { return !operator==(other); }
+	bool operator==(const Vec& other) const { return (x == other.x && y == other.y && z == other.z); }
+	bool operator!=(const Vec& other) const { return !operator==(other); }
 
-	Vec& operator+=(const Point& o) { x += o.x; y += o.y; z += o.z; return *this; }
-	Vec& operator-=(const Point& o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
-	Vec& operator*=(const Point& o) { x *= o.x; y *= o.y; z *= o.z; return *this; }
+	Vec& operator+=(const Vec& o) { x += o.x; y += o.y; z += o.z; return *this; }
+	Vec& operator-=(const Vec& o) { x -= o.x; y -= o.y; z -= o.z; return *this; }
+	Vec& operator*=(const Vec& o) { x *= o.x; y *= o.y; z *= o.z; return *this; }
 
 	Vec operator+(const Vec &b) const { return Vec(x + b.x, y + b.y, z + b.z); } 
 	Vec operator-(const Vec &b) const { return Vec(x - b.x, y - b.y, z - b.z); } 
@@ -62,7 +62,7 @@ struct Vec {
 	}
 }; 
 
-std::ostream& operator<<(std::ostream& os, const Point& p) {
+std::ostream& operator<<(std::ostream& os, const Vec& p) {
   os << "(" << p.x << "," << p.y << "," << p.z << ")";
   return os;
 }
