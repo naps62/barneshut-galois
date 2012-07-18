@@ -101,24 +101,33 @@ Vec radiance(const Ray &r, int depth, unsigned short *Xi){
 
 
 
-
+/***********************************************************
+ * MAIN
+ */
+ static llvm::cl::opt<unsigned> width("w", llvm::cl::desc("Output image width"), llvm::cl::init(1024));
+ static llvm::cl::opt<unsigned> height("h", llvm::cl::desc("Output image height"), llvm::cl::init(768));
+ static llvm::cl::opt<unsigned> spp("spp", llvm::cl::desc("Samples per pixel"), llvm::cl::init(1));
 
 // Usage: time ./smallpt 5000 && xv image.ppm
-int main(int argc, char *argv[]){ 
-	int w = 1024;
-	int h = 768;
-	int samps = (argc == 2) ? atoi(argv[1]) / 4 : 1; // # samples 
-	Ray cam(Vec(50, 52, 295.6), Vec(0,-0.042612, -1).norm());// cam pos, dir 
+int main(int argc, char *argv[]) {
+	//TODO: esta merda assim é um nojo, raio de valores mais aleatórios
+	Ray cam(Vec(50, 52, 295.6), Vec(0,-0.042612, -1).norm());// cam pos, lookAt 
 	Vec cx = Vec(w * .5135 / h);
 	Vec cy = (cx % cam.d).norm() * .5135;
 	Vec r;
 	Vec *c = new Vec[w * h];
 
-#pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP 
-	for (int y = 0; y < h; y++) {                       // Loop over image rows 
-		fprintf(stderr, "\rRendering (%d spp) %5.2f%%", samps * 4, 100. * y / (h-1)); 
-		for (unsigned short x = 0, Xi[3] = {0, 0, y * y * y}; x < w; x++)   // Loop cols 
-			for (int sy = 0, i = (h - y - 1) * w + x; sy < 2; sy++)     // 2x2 subpixel rows 
+	assert(spp % 4 && "Samples-per-pixel must be a multiple of 4");
+
+	cerr << endl;
+#pragma omp parallel for schedule(dynamic, 1) private(r)       // OpenMP (you don't say?)
+	for (unsigned y = 0; y < height; ++y) {                       // Loop over image rows
+		fprintf(stderr, "\nRendering (%d spp) %5.2f%%", spp * 4, 100. * y / (h-1));
+		cerr << "Rendering (" << spp << " spp)\t" << 100.0 * y / (h - 1) << '%' << endl;
+		Xi[3] = {0, 0, y * y * y};
+		for (unsigned x = 0; x < width; ++x)   // Loop cols
+			int lleft = (height - y - 1) * width
+			for (int sy = 0, i = (height - y - 1) * w + x; sy < 2; sy++)     // 2x2 subpixel rows 
 				for (int sx = 0; sx < 2; sx++, r = Vec()){        // 2x2 subpixel cols 
 					for (int s = 0; s < samps; s++){ 
 						double r1 = 2 * erand48(Xi);
