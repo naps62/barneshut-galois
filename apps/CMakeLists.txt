@@ -4,5 +4,7 @@ add_subdirectory(barneshut)
 add_subdirectory(orderedblockedbarneshut)
 #add_subdirectory(pcosta)
 #add_subdirectory(oldbarneshut)
-add_subdirectory(raytracer)
+
+#add_subdirectory(originalraytracer)
 add_subdirectory(cleanraytracer)
+add_subdirectory(galoisraytracer)

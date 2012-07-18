@@ -18,7 +18,6 @@ using namespace std;
 #include "object.h"
 #include "scene.h"
 
-
 static llvm::cl::opt<unsigned> width  ("w",   llvm::cl::desc("Output image width"),  llvm::cl::init(1024));
 static llvm::cl::opt<unsigned> height ("h",   llvm::cl::desc("Output image height"), llvm::cl::init(768));
 static llvm::cl::opt<unsigned> spp    ("spp", llvm::cl::desc("Samples per pixel"),   llvm::cl::init(4));

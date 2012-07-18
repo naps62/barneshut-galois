@@ -44,9 +44,11 @@ struct Scene {
 		for (unsigned y = 0; y < height; ++y) {
 			cerr << "\rRendering (" << spp << " spp, with 4 subpixels) " << (100.0 * y / (height - 1)) << '%';
 			unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(y*y*y)};
+
 			// Loop cols
 			for (unsigned x = 0; x < width; ++x) {
 				int i = (height - y - 1) * width + x;
+
 				// 2x2 subpixel rows
 				for (int sy = 0; sy < 2; sy++) {
 					// 2x2 subpixel cols
@@ -54,14 +56,19 @@ struct Scene {
 						//	samples per pixel
 						for (uint s = 0; s < spp; s++){ 
 							double r1 = 2 * erand48(Xi);
-							double dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
 							double r2 = 2 * erand48(Xi);
-							double dy = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2); 
-							Vec d = cx * ( ( (sx + .5 + dx) / 2 + x) / width - .5) + 
-								cy * ( ( (sy + .5 + dy) / 2 + y) / height - .5) + cam.dir; 
-							r = r + radiance(Ray(cam.orig + d * 140, d.norm()), 0, Xi) * (1. / spp); 
-						} // Camera rays are pushed ^^^^^ forward to start in interior
-						img[i] = img[i] + Vec(clamp(r.x), clamp(r.y) , clamp(r.z)) * .25; 
+
+							double dirX = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+							double dirY = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2); 
+
+							Vec dir = cx * (((sx + 0.5 + dirX)/2 + x) / width  - 0.5) + 
+								       cy * (((sy + 0.5 + dirY)/2 + y) / height - 0.5) +
+								       cam.dir; 
+
+							// Camera rays are pushed forward to start in interior
+							r += radiance(Ray(cam.orig + dir*140, dir.norm()), 0, Xi) * (1.0 / spp); 
+						} 
+						img[i] += Vec(clamp(r.x), clamp(r.y), clamp(r.z)) * 0.25; 
 					} 
 				}
 			}
