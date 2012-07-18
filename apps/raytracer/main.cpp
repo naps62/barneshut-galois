@@ -117,7 +117,6 @@ static llvm::cl::opt<unsigned> spp   ("spp", llvm::cl::desc("Samples per pixel")
 // Usage: time ./smallpt 5000 && xv image.ppm
 int main(int argc, char *argv[]) {
 	llvm::cl::ParseCommandLineOptions(argc, argv);
-	assert(spp % 4 && "Samples-per-pixel must be a multiple of 4");
 
 	//TODO: esta merda assim é um nojo, raio de valores mais aleatórios
 
@@ -138,14 +137,18 @@ int main(int argc, char *argv[]) {
 	cerr.precision(2);
 
 	#pragma omp parallel for schedule(dynamic, 1) private(r) // OpenMP (you don't say?)
-	for (unsigned int y = 0; y < height; ++y) { // Loop over image rows
-		cerr << "\rRendering (" << spp << " spp) " << (100.0 * y / (height - 1)) << '%';
+	// Loop over image rows
+	for (unsigned y = 0; y < height; ++y) {
+		cerr << "\rRendering (" << spp << " spp, with 4 subpixels) " << (100.0 * y / (height - 1)) << '%';
 		unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(y*y*y)};
-
-		for (unsigned short x = 0; x < width; ++x) {   // Loop cols
-			int lleft = (height - y - 1) * width;
-			for (int sy = 0, i = (height - y - 1) * width + x; sy < 2; sy++)     // 2x2 subpixel rows 
-				for (int sx = 0; sx < 2; sx++, r = Vec()){        // 2x2 subpixel cols 
+		// Loop cols
+		for (unsigned x = 0; x < width; ++x) {
+			int i = (height - y - 1) * width + x;
+			// 2x2 subpixel rows
+			for (int sy = 0; sy < 2; sy++)
+				// 2x2 subpixel cols
+				for (int sx = 0; sx < 2; sx++, r = Vec()) {
+					//	samples per pixel
 					for (int s = 0; s < spp; s++){ 
 						double r1 = 2 * erand48(Xi);
 						double dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
