@@ -7,9 +7,9 @@ struct Vec {
 	/**
 	 * Constructors
 	 */
-	Vec() : x(0.0), y(0.0), z(0.0) { }
-	Vec(double _x, double _y, double _z) : x(_x), y(_y), z(_z) { }
-	explicit Vec(double v) : x(v), y(v), z(v) { }
+	//Vec() : x(0.0), y(0.0), z(0.0) { }
+	Vec(double _x=0, double _y=0, double _z=0) : x(_x), y(_y), z(_z) { }
+	//explicit Vec(double v) : x(v), y(v), z(v) { }
 
 	/**
 	 * Operators

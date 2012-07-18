@@ -23,7 +23,7 @@ struct Object {
 
 
 /** Sphere object */
-struct Sphere : Object {
+struct Sphere : public Object {
 	// radius of the sphere
 	double rad;
 
