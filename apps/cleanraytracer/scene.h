@@ -2,14 +2,14 @@
 struct Scene {
 	// total size of the scene
 	Vec size;
+	uint width;
+	uint height;
 
 	Ray cam;
 	Vec cx;
 	Vec cy;
 
 	// objects, including boxes on the borders
-	uint width;
-	uint height;
 	vector<Sphere> objects;
 	vector<Vec> img;
 
@@ -17,10 +17,10 @@ struct Scene {
 	: size(_size),
 	  width(_w),
 	  height(_h),
-	  img(width*height),
 	  cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
 	  cx(width * 0.5135 / height),
-	  cy((cx % cam.dest).norm() * 0.5135) {
+	  cy((cx % cam.dest).norm() * 0.5135),
+	  img(width*height) {
 
 		initScene(size);
 	}
@@ -32,16 +32,16 @@ struct Scene {
 
 		Vec r;
 
-		#pragma omp parallel for schedule(dynamic, 1) private(r) // OpenMP (you don't say?)
+		//#pragma omp parallel for schedule(dynamic, 1) private(r) // OpenMP (you don't say?)
 		for (unsigned int y = 0; y < height; ++y) { // Loop over image rows
 			cerr << "\rRendering (" << spp << " spp) " << (100.0 * y / (height - 1)) << '%';
 			unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(y*y*y)};
 
 			for (unsigned short x = 0; x < width; ++x) {   // Loop cols
-				int lleft = (height - y - 1) * width;
+				//int lleft = (height - y - 1) * width;
 				for (int sy = 0, i = (height - y - 1) * width + x; sy < 2; sy++)     // 2x2 subpixel rows 
 					for (int sx = 0; sx < 2; sx++, r = Vec()){        // 2x2 subpixel cols 
-						for (int s = 0; s < spp; s++){ 
+						for (uint s = 0; s < spp; s++){ 
 							double r1 = 2 * erand48(Xi);
 							double dx = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
 							double r2 = 2 * erand48(Xi);
@@ -98,12 +98,12 @@ struct Scene {
 
 		double p = f.x > f.y && f.x > f.z ? f.x : f.y > f.z ? f.y : f.z; // max refl
 
-		if (++depth > 5)
+		if (++depth > 5) {
 			if (erand48(Xi) < p)
 				f = f * (1/p);
 			else
 				return obj.emission; //R.R. 
-
+		}
 		if (obj.refl == DIFF){                  // Ideal DIFFUSE reflection 
 			double r1 = 2 * M_PI * erand48(Xi), r2 = erand48(Xi), r2s = sqrt(r2); 
 			Vec w = nl, u=((fabs(w.x)>.1?Vec(0,1):Vec(1))%w).norm(), v=w%u; 
