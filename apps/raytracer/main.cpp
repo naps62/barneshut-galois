@@ -21,7 +21,7 @@ using namespace std;
 /***********************************************************
  * DATA
  */
-/*
+
 Sphere spheres[] = {//Scene: radius, position, emission, color, material 
 	Sphere(1e5,  Vec( 1e5+1, 40.8,81.6), Vec(),Vec(.75,.25,.25),DIFF),//Left 
 	Sphere(1e5,  Vec(-1e5+99,40.8,81.6),Vec(),Vec(.25,.25,.75),DIFF),//Rght 
@@ -32,12 +32,12 @@ Sphere spheres[] = {//Scene: radius, position, emission, color, material
 	Sphere(16.5, Vec(27,16.5,47),       Vec(),Vec(1,1,1)*.999, SPEC),//Mirr 
 	Sphere(16.5, Vec(73,16.5,78),       Vec(),Vec(1,1,1)*.999, REFR),//Glas 
 	Sphere(600,  Vec(50,681.6-.27,81.6),Vec(12,12,12),  Vec(), DIFF) //Lite 
-};*/
+};
 
 /***********************************************************
  * INLINE DEFINITIONS
  */
-/*inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; } 
+inline double clamp(double x) { return x < 0 ? 0 : x > 1 ? 1 : x; } 
 
 inline int toInt(double x) { return int(pow(clamp(x), 1 / 2.2) * 255 + .5); } 
 
@@ -50,13 +50,13 @@ inline bool intersect(const Ray &r, double &t, int &id){
 		} 
 	return t < inf; 
 }
-*/
+
 
 /***********************************************************
  * RADIANCE
  */
 
-/*Vec radiance(const Ray &r, int depth, unsigned short *Xi){ 
+Vec radiance(const Ray &r, int depth, unsigned short *Xi){ 
 	double t;                               // distance to intersection 
 	int id = 0;                             // id of intersected object 
 	if (!intersect(r, t, id))
@@ -102,7 +102,7 @@ inline bool intersect(const Ray &r, double &t, int &id){
 	return obj.emission + f.mult(depth > 2 ? (erand48(Xi) < P ?   // Russian roulette 
 				radiance(reflRay, depth, Xi) * RP : radiance(Ray(x,tdir), depth, Xi) * TP) : 
 			radiance(reflRay, depth, Xi) * Re + radiance(Ray(x,tdir), depth, Xi) * Tr); 
-}*/
+}
 
 
 #include "scene.h"
@@ -124,16 +124,16 @@ int main(int argc, char *argv[]) {
 	// cam pos, lookAt 
 	Ray cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm());
 
-	/*Vec cx = Vec(width * 0.5135 / height);
+	Vec cx = Vec(width * 0.5135 / height);
 	Vec cy = (cx % cam.dest).norm() * .5135;
 	Vec r;
-	vector<Vec> img(width * height);// = new Vec[width * height];*/
-	Scene scene(width, height, Vec()/*TODO falta isto*/);
-	scene.raytrace(spp);
-	scene.save(string("image.ppm"));
+	vector<Vec> img(width * height);// = new Vec[width * height];
+	//Scene scene(width, height, Vec()/*TODO falta isto*/);
+	//scene.raytrace(spp);
+	//scene.save(string("image.ppm"));
 	
 
-	/*cerr << endl << fixed;
+	cerr << endl << fixed;
 	cerr.width(2);
 	cerr.precision(2);
 
@@ -166,5 +166,5 @@ int main(int argc, char *argv[]) {
 		fs << toInt(img[i].x) << " " << toInt(img[i].y) << " " << toInt(img[i].y) << " ";
 
 	fs.close();
-	cerr << endl;*/
+	cerr << endl;
 }
