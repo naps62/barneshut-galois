@@ -73,7 +73,12 @@ int main(int argc, char *argv[]) {
 	Galois::StatTimer T("Total");
 	T.start();
 	Scene scene(width, height, Vec()/*TODO falta isto*/);
-	scene.raytrace(spp, seed);
+
+	try {
+		scene.raytrace(spp, seed);
+	} catch (bad_alloc& ba) {
+		cerr << "bad_alloc caught: " << ba.what() << endl;	
+	}
 	scene.save(outfile);
 	T.stop();
 
