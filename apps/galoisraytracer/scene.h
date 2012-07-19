@@ -26,9 +26,7 @@ struct Scene {
 	// objects, including boxes on the borders
 	ObjectList objects;
 	Image img;
-
 	const int spp;
-	Rays rays;
 
 	/**
 	 * Constructor
@@ -40,8 +38,7 @@ struct Scene {
 	  cx(_w * 0.5135 / _h),
 	  cy((cx % cam.dir).norm() * 0.5135),
 	  img(_w, _h),
-	  spp(_spp),
-	  rays(0) {
+	  spp(_spp) {
 
 		initScene(size);
 	}
@@ -50,14 +47,12 @@ struct Scene {
 	 * Main function
 	 */
 	void raytrace() {
-		Galois::StatTimer T("Raytracing");
-		Galois::StatTimer T_rayGen("RayGeneration");
+		//Galois::StatTimer T("Raytracing");
+		//Galois::StatTimer T_rayGen("RayGeneration");
 		Galois::StatTimer T_rayTrace("RayTrace");
-		Galois::StatTimer T_imgClamp("ImgClamp");
+		//Galois::StatTimer T_imgClamp("ImgClamp");
 
 		Galois::setActiveThreads(numThreads);
-
-		T.start();
 		
 		//
 		// Step 2. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
@@ -74,15 +69,14 @@ struct Scene {
 		//
 		// Step 3. Clamp all values to a 0-255 scale
 		//
-		T_imgClamp.start();
-		Galois::for_each(wrap(img.begin()), wrap(img.end()), ClampImage());
+		//T_imgClamp.start();
+		//Galois::for_each(wrap(img.begin()), wrap(img.end()), ClampImage());
 		//for(unsigned int i = 0; i < img.size(); ++i) {
 		//	Vec& rad = img[i];
 		//	img[i] = Vec(clamp(img[i].x), clamp(img[i].y), clamp(img[i].z));
 		//}
-		T_imgClamp.stop();
+		//T_imgClamp.stop();
 
-		T.stop();
 	}
 
 	/** save image to file */
@@ -98,36 +92,6 @@ struct Scene {
 	 * Private methods
 	 */
 	private:
-
-	/*void generateRays() {
-		for (unsigned y = 0; y < height; ++y) {						// Loop rows
-			unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(y*y*y)};
-			for (unsigned x = 0; x < width; ++x) {						// Look cols
-				int pixelIdx = (height - y - 1) * width + x;
-				for (int sy = 0; sy < 2; sy++) {							// 2x2 subpixel rows
-					for (int sx = 0; sx < 2; sx++) {						// 2x2 subpixel cols
-						for (uint s = 0; s < spp; s++){ 					// samples
-
-							double r1 = 2 * erand48(Xi);
-							double r2 = 2 * erand48(Xi);
-
-							double dirX = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
-							double dirY = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2); 
-
-							Vec dir = cx * (((sx + 0.5 + dirX)/2 + x) / width  - 0.5) + 
-										 cy * (((sy + 0.5 + dirY)/2 + y) / height - 0.5) +
-										 cam.dir; 
-
-							Vec pos = cam.orig + dir * 140;
-
-							// Camera rays are pushed forward to start in interior
-							rays.push_back(Ray(pos, dir.norm(), Xi, pixelIdx));
-						}
-					}
-				}
-			}
-		}
-	}*/
 
 	/** initializes scene with some objects */
 	void initScene(const Vec& size) {
