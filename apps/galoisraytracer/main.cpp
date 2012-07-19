@@ -17,6 +17,7 @@ using namespace std;
 #include "vec.h"
 #include "ray.h"
 #include "object.h"
+#include "image.h"
 
 /** clamps a value between 0 and 1 */
 inline double clamp(double x) {
@@ -31,7 +32,6 @@ inline int toInt(double x) {
 } 
 
 
-typedef vector<Vec> Image;
 typedef vector<Ray> Rays;
 typedef vector<Sphere> ObjectList;
 
@@ -72,13 +72,8 @@ int main(int argc, char *argv[]) {
 
 	Galois::StatTimer T("Total");
 	T.start();
-	Scene scene(width, height, Vec()/*TODO falta isto*/);
-
-	try {
-		scene.raytrace(spp, seed);
-	} catch (bad_alloc& ba) {
-		cerr << "bad_alloc caught: " << ba.what() << endl;	
-	}
+	Scene scene(width, height, Vec()/*TODO falta isto*/, spp);
+	scene.raytrace();
 	scene.save(outfile);
 	T.stop();
 

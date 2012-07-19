@@ -7,30 +7,56 @@ struct RayTrace {
 	typedef int tt_does_not_need_stats;
 	typedef int tt_does_not_need_aborts;
 
+	const Ray& cam;
+	const Vec& cx;
+	const Vec& cy;
 	const ObjectList& objects;
 	Image& img;
+	const uint spp;
 	const double contrib;
 
-	RayTrace(const ObjectList& _objects, Image& _img, uint spp)
-		: objects(_objects),
+	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, Image& _img, const uint _spp)
+		: cam(_cam),
+		  cx(_cx),
+		  cy(_cy),
+		  objects(_objects),
 		  img(_img),
-		  contrib(0.25 / spp) { }
+		  spp(_spp),
+		  contrib(1.0 / spp) { }
 
 	template<typename Context>
-	void operator()(Ray* r, Context&) {
-		Ray& ray = *r;
-		//cout << radiance(ray, 0) << contrib << endl;
-		img[ray.pixelIdx] += radiance(ray, 0) * contrib;
+	void operator()(Pixel* p, Context&) {
+		Pixel& pixel = *p;
+		unsigned short seed = static_cast<unsigned short>(pixel.h * pixel.h * pixel.w);
+		unsigned short Xi[3] = {0, 0, seed};
 
-		//cout << img[ray.pixelIdx] << contrib << endl;
-		//for(int i = 0; i < img.size(); ++i)
-//			cout << img[i] << endl;
+		Vec rad;
+		
+		for(uint sy = 0; sy < 2; ++sy) {
+			for(uint sx = 0; sx < 2; ++sx, rad = Vec()) {
+
+				for(uint sample = 0; sample < spp; ++sample) {
+					double r1 = 2 * erand48(Xi);
+					double r2 = 2 * erand48(Xi);
+					double dirX = r1 < 1 ? sqrt(r1) - 1 : 1 - sqrt(2 - r1);
+					double dirY = r2 < 1 ? sqrt(r2) - 1 : 1 - sqrt(2 - r2); 
+
+					Vec dir = cx * (((sx + 0.5 + dirX)/2 + pixel.w) / img.width  - 0.5) + 
+							 	 cy * (((sy + 0.5 + dirY)/2 + pixel.h) / img.height - 0.5) +
+							 	 cam.dir; 
+					Vec pos = cam.orig + dir * 140;
+
+					rad += radiance(Ray(pos, dir.norm()), 0, Xi) * contrib;
+
+				}
+				pixel += Vec(clamp(rad.x), clamp(rad.y), clamp(rad.z)) * 0.25;
+			}
+		}
 	}
 
 	private:
 	/** compute total radiance for a ray */
-	Vec radiance(Ray &r, int depth){ 
-		unsigned short* Xi = r.Xi;
+	Vec radiance(const Ray &r, int depth, unsigned short *Xi){ 
 		// distance to intersection 
 		double dist;
 
@@ -72,22 +98,22 @@ struct RayTrace {
 				Vec v   = w % u;
 				Vec dir = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm(); 
 
-				Ray diffuse_ray(hit_point, dir, Xi);
-				return obj.emission + f.mult(radiance(diffuse_ray, depth)); 
+				Ray diffuse_ray(hit_point, dir);
+				return obj.emission + f.mult(radiance(diffuse_ray, depth, Xi)); 
 				break;
 			}
 
 			// Ideal SPECULAR reflection
 			case SPEC: {
-				Ray specular_ray(hit_point,r.dir - norm * 2 * norm.dot(r.dir), Xi);
-				return obj.emission + f.mult(radiance(specular_ray, depth));
+				Ray specular_ray(hit_point,r.dir - norm * 2 * norm.dot(r.dir));
+				return obj.emission + f.mult(radiance(specular_ray, depth, Xi));
 				break;
 			}
 
 			// Ideal dielectric REFRACTION
 			case REFR:
 			default: {
-				Ray reflRay(hit_point, r.dir - norm * 2 * norm.dot(r.dir), Xi);
+				Ray reflRay(hit_point, r.dir - norm * 2 * norm.dot(r.dir));
 				// Ray from outside going in?
 				bool into    = norm.dot(nl) > 0;
 				double nc    = 1, nt  = 1.5;
@@ -97,7 +123,7 @@ struct RayTrace {
 
 				// Total internal reflection
 				if (cos2t < 0) {
-					return obj.emission + f.mult(radiance(reflRay, depth));
+					return obj.emission + f.mult(radiance(reflRay, depth, Xi));
 				} else {
 					Vec tdir = (r.dir * nnt - norm * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)) )).norm();
 					double a = nt - nc;
@@ -111,14 +137,14 @@ struct RayTrace {
 					double TP = Tr / (1 - P); 
 
 					// Russian roulette 
-					Ray refrRay(hit_point, tdir, Xi);
+					Ray refrRay(hit_point, tdir);
 					Vec refrResult;
 
 					if (depth > 2) { // if ray is deep enough, consider only one of the contributions
-						if (erand48(Xi) < P) refrResult = radiance(reflRay, depth) * RP;
-						else                 refrResult = radiance(refrRay, depth) * TP;
+						if (erand48(Xi) < P) refrResult = radiance(reflRay, depth, Xi) * RP;
+						else                 refrResult = radiance(refrRay, depth, Xi) * TP;
 					} else { // otherwise, sum both
-						refrResult = radiance(reflRay, depth) * Re + radiance(refrRay, depth) * Tr;
+						refrResult = radiance(reflRay, depth, Xi) * Re + radiance(refrRay, depth, Xi) * Tr;
 					}
 					return obj.emission + f.mult(refrResult); 
 				}
