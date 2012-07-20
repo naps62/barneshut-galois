@@ -43,12 +43,13 @@ const char* name = "RayTracing";
 const char* desc = "Simple ray tracing implementation using octree for scene indexing\n";
 const char* url  = "raytracing";
 
-static llvm::cl::opt<unsigned> width   ("w",    llvm::cl::desc("Output image width"),  llvm::cl::init(1024));
-static llvm::cl::opt<unsigned> height  ("h",    llvm::cl::desc("Output image height"), llvm::cl::init(768));
-static llvm::cl::opt<unsigned> spp     ("spp",  llvm::cl::desc("Samples per pixel"),   llvm::cl::init(4));
-static llvm::cl::opt<unsigned> maxdepth("d",    llvm::cl::desc("Max ray depth"),       llvm::cl::init(5));
-static llvm::cl::opt<string>   outfile ("out",  llvm::cl::desc("Output file"),         llvm::cl::init(string("image.ppm")));
-static llvm::cl::opt<int>      seed    ("seed", llvm::cl::desc("Random seed"),         llvm::cl::init(7));
+static llvm::cl::opt<uint>   width   ("w",    llvm::cl::desc("Output image width"),  llvm::cl::init(1024));
+static llvm::cl::opt<uint>   height  ("h",    llvm::cl::desc("Output image height"), llvm::cl::init(768));
+static llvm::cl::opt<uint>   spp     ("spp",  llvm::cl::desc("Samples per pixel"),   llvm::cl::init(4));
+static llvm::cl::opt<uint>   maxdepth("d",    llvm::cl::desc("Max ray depth"),       llvm::cl::init(5));
+static llvm::cl::opt<string> outfile ("out",  llvm::cl::desc("Output file"),         llvm::cl::init(string("image.ppm")));
+static llvm::cl::opt<int>    seed    ("seed", llvm::cl::desc("Random seed"),         llvm::cl::init(7));
+static llvm::cl::opt<uint>   n       ("n",    llvm::cl::desc("Number of spheres"),   llvm::cl::init(2));
 
 /***********************************************************
  * MAIN
@@ -73,7 +74,7 @@ int main(int argc, char *argv[]) {
 
 	Galois::StatTimer T("Total");
 	T.start();
-	Scene scene(width, height, Vec()/*TODO falta isto*/, spp, maxdepth);
+	Scene scene(width, height, spp, maxdepth, n);
 	scene.raytrace();
 	scene.save(outfile);
 	T.stop();

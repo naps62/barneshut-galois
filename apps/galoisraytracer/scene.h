@@ -26,19 +26,21 @@ struct Scene {
 	// objects, including boxes on the borders
 	ObjectList objects;
 	Image img;
-	const int spp;
+	const uint spp;
+	const uint maxdepth;
 
 	/**
 	 * Constructor
 	 */
-	Scene(uint _w, int _h, Vec _size, uint _spp)
+	Scene(uint _w, int _h, Vec _size, uint _spp, uint _maxdepth)
 	: size(_size),
 	  //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
 	  cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
 	  cx(_w * 0.5135 / _h),
 	  cy((cx % cam.dir).norm() * 0.5135),
 	  img(_w, _h),
-	  spp(_spp) {
+	  spp(_spp),
+	  maxdepth(_maxdepth) {
 
 		initScene(size);
 	}
@@ -47,36 +49,16 @@ struct Scene {
 	 * Main function
 	 */
 	void raytrace() {
-		//Galois::StatTimer T("Raytracing");
-		//Galois::StatTimer T_rayGen("RayGeneration");
 		Galois::StatTimer T_rayTrace("RayTrace");
-		//Galois::StatTimer T_imgClamp("ImgClamp");
 
 		Galois::setActiveThreads(numThreads);
 		
 		//
-		// Step 2. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
+		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
 		//
 		T_rayTrace.start();
-		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp));
-		//for(unsigned int i = 0; i < rays.size(); ++i) {
-		//	Ray& ray = rays[i];
-		//	img[ray.pixelIdx] += radiance(ray, 0) * (0.25 / spp);
-		//}
+		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp, maxdepth));
 		T_rayTrace.stop();
-
-
-		//
-		// Step 3. Clamp all values to a 0-255 scale
-		//
-		//T_imgClamp.start();
-		//Galois::for_each(wrap(img.begin()), wrap(img.end()), ClampImage());
-		//for(unsigned int i = 0; i < img.size(); ++i) {
-		//	Vec& rad = img[i];
-		//	img[i] = Vec(clamp(img[i].x), clamp(img[i].y), clamp(img[i].z));
-		//}
-		//T_imgClamp.stop();
-
 	}
 
 	/** save image to file */

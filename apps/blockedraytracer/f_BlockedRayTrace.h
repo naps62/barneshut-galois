@@ -1,15 +1,17 @@
 /**
  * Functor
  *
- * Compute radiance for all rays
+ * Compute radiance for all rays, in blocks
  */
-struct RayTrace {
+struct BlockedRayTrace {
 	typedef int tt_does_not_need_stats;
 	typedef int tt_does_not_need_aborts;
 
 	const Ray& cam;
 	const Vec& cx;
 	const Vec& cy;
+
+	// this will be an octree
 	const ObjectList& objects;
 	Image& img;
 	const uint spp;
