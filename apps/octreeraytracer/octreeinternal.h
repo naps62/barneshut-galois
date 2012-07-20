@@ -1,30 +1,58 @@
+#ifndef ___OCTREE_INTERNAL___
+#define ___OCTREE_INTERNAL___
+
+#include "octree.h"
+#include "octreeleaf.h"
+
+// C++ includes
+#include <iostream>
+
+//	C includes
+#include <string.h>
+
+#include "boundingbox.h"
+#include "ray.h"
+
 /**	Non-leaf octree node. Represents a voxel as an object container.
  */
-struct OctreeInternal : public Octree {
+class OctreeInternal : public Octree {
+	Point _min, _max;
+	int _node;
+public:
 	Octree* childs[8];
-	Point size;
+	const Point size;//	size of this voxel
 
 	/**
 	 * \param pos Centroid (current node) in cartesian coordinates.
 	 */
-	OctreeInternal (Point pos) : Octree(pos) {
-		memset(child, NULL, sizeof(*childs * 8));
+	OctreeInternal (Point pos, Point dimension)
+	: Octree(pos)
+	, size(dimension)
+	{ init(); }
+
+	OctreeInternal (BoundingBox bbox)
+	: Octree(bbox.center())
+	, _min(bbox.min)
+	, _max(bbox.max)
+	, size(abs(_max.x - _min.x), abs(_max.y - _min.y), abs(_max.z - _min.z))
+	{
+		init();
 	}
 
-	OctreeInternal (BoundingBox bbox) : Octree(bbox.center()), _min(bbox.min), _max(bbox.max) {
-		memset(child, NULL, sizeof(*childs * 8));
-		_dim = Point(abs(_max.x - _min.x), abs(_max.y - _min.y), abs(_max.z - _min.z));
-		_dimhlf *= 0.5;
-	}
+	void insert(OctreeLeaf *obj);
 
-	void insert(OctreeObject *obj);
+	// OctreeLeaf* shoot (Ray x);
 
-	OctreeObject* shoot (Ray x);
+	bool isLeaf() const { return false; }
 
+	//	returns the first intersected object in this node
+	// OctreeLeaf* intersect (double tx0, double ty0, double tz0, double tx1, double ty1, double tz1);
+	OctreeLeaf* intersect (const Ray &r);
 private:
-	Point _min, _max;
-	Point _dim, _dimhlf;
-	int _node;
+
+	void init() {
+		memset(childs, NULL, sizeof(*childs) * 8);
+	}
 
 	/**	Returns the index of the sub-voxel a leaf belongs in.
 	 * \param p Position of the leaf.
@@ -33,9 +61,6 @@ private:
 
 	double max(double x, double y, double z);
 	double min(double x, double y, double z);
-	
-	//	returns the first intersected object in this node
-	OctreeLeaf* intersect (double tx0, double ty0, double tz0, double tx1, double ty1, double tz1);
 
 	//	returns the index of the first sub-node intersected by the ray
 	int first_node (double tx0, double ty0, double tz0, double txm, double tym, double tzm);
@@ -63,7 +88,7 @@ double min(double x, double y, double z)
 { return (x < y) ? ((x < z) ? x : z) : ((y < z ? y : z)); }
 
 inline
-int index(const Point& p)
+int OctreeInternal::index(const Point& p)
 {
 	return
 		(p.x > pos.x) * 4 +
@@ -74,39 +99,38 @@ int index(const Point& p)
 inline
 int new_node (double f1, int i1, double f2, int i2, double f3, int i3)
 {
-	if (f1 < f2)
+	if (f1 < f2) {
 		if (f1 < f3)
 			return i1;
-	else
+	} else {
 		if (f2 < f3)
 			return i2;
+	}
 	return i3;
 }
 
 inline
-Point centroid (int index)
+Point OctreeInternal::centroid (int index)
 {
 	Point p(pos);
+	Point sizehf(size * .5);
 	//	move in the x axis
 	if (index & 4)
-		p.x += dimhlf.x;
+		p.x += sizehf.x;
 	else
-		p.x -= dimhlf.x;
+		p.x -= sizehf.x;
 	//	move in the y axis
 	if (index & 2)
-		p.y += dimhlf.y;
+		p.y += sizehf.y;
 	else
-		p.y -= dimhlf.y;
+		p.y -= sizehf.y;
 	//	move in the z axis
-	if (index & 1;
-		p.z += dimhlf.z;
+	if (index & 1)
+		p.z += sizehf.z;
 	else
-		p.z -= dimhlf.z;
+		p.z -= sizehf.z;
 	return p;
 }
-
-
-
 
 
 
@@ -118,3 +142,11 @@ Point centroid (int index)
 //     p[i] += v;
 //   }
 // }
+
+inline
+std::ostream& operator<< (std::ostream& out, OctreeInternal& octint) {
+	out << octint.pos << '\t' << octint.size;
+	return out;
+}
+
+#endif//___OCTREE_INTERNAL___

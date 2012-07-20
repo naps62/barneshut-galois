@@ -1,3 +1,6 @@
+#include "object.h"
+#include "octree.h"
+
 /** Scene representation */
 struct Scene {
 	// total size of the scene
@@ -10,8 +13,11 @@ struct Scene {
 	Vec cy;
 
 	// objects, including boxes on the borders
-	vector<Sphere> objects;
+	vector<Sphere*> objects;
 	vector<Vec> img;
+
+	//	octree
+	OctreeInternal* tree;
 
 	/**
 	 * Constructor
@@ -28,13 +34,28 @@ struct Scene {
 
 		initScene(size);
 
-		tree = new OctreeInternal(BoundingBox(objects));
+		//	TODO: order objects
+
+		vector<BoundingBox> boxes;
+		for (vector<Sphere*>::iterator it = objects.begin(); it < objects.end(); ++it)
+			boxes.push_back((*it)->getBoundingBox());
+		// BoundingBox bbox(boxes);
+		// cerr << bbox << endl;
+		tree = new OctreeInternal(BoundingBox(boxes));
+		// cerr << *tree << endl;
+
+		for (vector<Sphere*>::iterator it = objects.begin(); it < objects.end(); ++it)
+			tree->insert(*it);
+
+		// exit(1);
 	}
 
 	/**
 	 * Destructor
 	 */
-	~Scene() { delete tree; }
+	~Scene() {
+		// delete tree;
+	}
 
 	/**
 	 * Main function
@@ -80,7 +101,7 @@ struct Scene {
 	void save(const string &file) {
 		ofstream fs(file);
 		fs << "P3" << endl << width << " " << height << "\n" << 255 << endl;
-		for (int i=0; i < (width * height); i++) 
+		for (unsigned i = 0; i < (width * height); i++) 
 			fs << toInt(img[i].x) << " " << toInt(img[i].y) << " " << toInt(img[i].y) << " ";
 		fs.close();
 	}
@@ -103,53 +124,62 @@ struct Scene {
 	} 
 
 	/** given a ray, calc which object it intersects with */
-	inline bool intersect(const Ray &r, double &dist, int &id){ 
-		double size = objects.size();
-		double inf = 1e20;
-		dist       = 1e20; 
+	// inline
+	// bool intersect(const Ray &r, double &dist, int &id){ 
+	// 	double size = objects.size();
+	// 	double inf = 1e20;
+	// 	dist       = 1e20; 
 
-		for (uint i = size; i--;) {
-			double d = objects[i].intersect(r);
-			if(d && d < dist){
-				dist = d;
-				id   = i;
-			}
-		}
-		return dist < inf; 
-	}
+	// 	for (uint i = size; i--;) {
+	// 		double d = objects[i]->intersect(r);
+	// 		if(d && d < dist){
+	// 			dist = d;
+	// 			id   = i;
+	// 		}
+	// 	}
+	// 	return dist < inf; 
+	// }
 
 	/** compute total radiance for a ray */
 	Vec radiance(const Ray &r, int depth, unsigned short *Xi){ 
 		// distance to intersection 
-		double dist;
+		// double dist;
 
 		// id of intersected object 
-		int id = 0;
+		// int id = 0;
 
 		// if miss, return black
-		if (!intersect(r, dist, id))
+		//	TODO: here, shoot the octree
+		// if (!intersect(r, dist, id))
+		// 	return Vec();
+		OctreeLeaf* leaf;
+		if ( !(leaf = tree->intersect(r)) )
 			return Vec();
 
+		Sphere* obj = static_cast<Sphere*>(leaf);
+		Point ro(r.orig);
+		double dist = Point(obj->pos).dist(ro);
+
 		// the hit object 
-		const Sphere &obj = objects[id];
-		Vec f         = obj.color;
+		// const Sphere* obj = objects[id];
+		Vec f         = obj->color;
 
 		//Russian Roullete to stop
 		if (++depth > 5) {
 			// max refl
-			double max_refl = obj.color.max_coord();
+			double max_refl = obj->color.max_coord();
 			if (erand48(Xi) < max_refl)
 				f = f * (1 / max_refl);
 			else
-				return obj.emission; 
+				return obj->emission; 
 		}
 
 
 		Vec hit_point = r.orig + r.dir * dist;
-		Vec norm      = (hit_point - obj.pos).norm();
+		Vec norm      = (hit_point - obj->pos).norm();
 		Vec nl        = norm.dot(r.dir) < 0 ? norm : (norm * -1);
 
-		switch(obj.refl) {
+		switch(obj->refl) {
 			// Ideal DIFFUSE reflection
 			case DIFF: {
 				double r1  = 2 * M_PI * erand48(Xi);
@@ -162,14 +192,14 @@ struct Scene {
 				Vec dir = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm(); 
 
 				Ray diffuse_ray(hit_point, dir);
-				return obj.emission + f.mult(radiance(diffuse_ray, depth, Xi)); 
+				return obj->emission + f.mult(radiance(diffuse_ray, depth, Xi)); 
 				break;
 			}
 
 			// Ideal SPECULAR reflection
 			case SPEC: {
 				Ray specular_ray(hit_point,r.dir - norm * 2 * norm.dot(r.dir));
-				return obj.emission + f.mult(radiance(specular_ray, depth, Xi));
+				return obj->emission + f.mult(radiance(specular_ray, depth, Xi));
 				break;
 			}
 
@@ -186,7 +216,7 @@ struct Scene {
 
 				// Total internal reflection
 				if (cos2t < 0) {
-					return obj.emission + f.mult(radiance(reflRay, depth, Xi));
+					return obj->emission + f.mult(radiance(reflRay, depth, Xi));
 				} else {
 					Vec tdir = (r.dir * nnt - norm * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)) )).norm();
 					double a = nt - nc;
@@ -209,7 +239,7 @@ struct Scene {
 					} else { // otherwise, sum both
 						refrResult = radiance(reflRay, depth, Xi) * Re + radiance(refrRay, depth, Xi) * Tr;
 					}
-					return obj.emission + f.mult(refrResult); 
+					return obj->emission + f.mult(refrResult); 
 				}
 			}
 		}
@@ -217,14 +247,14 @@ struct Scene {
 
 	/** initializes scene with some objects */
 	void initScene(const Vec& size) {
-		objects.push_back(Sphere(1e5,  Vec( 1e5+1,  40.8,      81.6),     Vec(),         Vec(.75,.25,.25), DIFF)); //Left
-		objects.push_back(Sphere(1e5,  Vec(-1e5+99, 40.8,      81.6),     Vec(),         Vec(.25,.25,.75), DIFF)); //Rght
-		objects.push_back(Sphere(1e5,  Vec(50,      40.8,      1e5),      Vec(),         Vec(.75,.75,.75), DIFF)); //Back
-		objects.push_back(Sphere(1e5,  Vec(50,      40.8,     -1e5+170),  Vec(),         Vec(),            DIFF)); //Frnt
-		objects.push_back(Sphere(1e5,  Vec(50,      1e5,       81.6),     Vec(),         Vec(.75,.75,.75), DIFF)); //Botm
-		objects.push_back(Sphere(1e5,  Vec(50,     -1e5+81.6,  81.6),     Vec(),         Vec(.75,.75,.75), DIFF)); //Top
-		objects.push_back(Sphere(16.5, Vec(27,      16.5,      47),       Vec(),         Vec(1,1,1)*.999,  SPEC)); //Mirr
-		objects.push_back(Sphere(16.5, Vec(73,      16.5,      78),       Vec(),         Vec(1,1,1)*.999,  REFR)); //Glas
-		objects.push_back(Sphere(600,  Vec(50,      681.6-.27, 81.6),     Vec(12,12,12), Vec(),            DIFF)); //Lite
+		objects.push_back(new Sphere(1e5,  Vec( 1e5+1,  40.8,      81.6),     Vec(),         Vec(.75,.25,.25), DIFF)); //Left
+		objects.push_back(new Sphere(1e5,  Vec(-1e5+99, 40.8,      81.6),     Vec(),         Vec(.25,.25,.75), DIFF)); //Rght
+		objects.push_back(new Sphere(1e5,  Vec(50,      40.8,      1e5),      Vec(),         Vec(.75,.75,.75), DIFF)); //Back
+		objects.push_back(new Sphere(1e5,  Vec(50,      40.8,     -1e5+170),  Vec(),         Vec(),            DIFF)); //Frnt
+		objects.push_back(new Sphere(1e5,  Vec(50,      1e5,       81.6),     Vec(),         Vec(.75,.75,.75), DIFF)); //Botm
+		objects.push_back(new Sphere(1e5,  Vec(50,     -1e5+81.6,  81.6),     Vec(),         Vec(.75,.75,.75), DIFF)); //Top
+		objects.push_back(new Sphere(16.5, Vec(27,      16.5,      47),       Vec(),         Vec(1,1,1)*.999,  SPEC)); //Mirr
+		objects.push_back(new Sphere(16.5, Vec(73,      16.5,      78),       Vec(),         Vec(1,1,1)*.999,  REFR)); //Glas
+		objects.push_back(new Sphere(600,  Vec(50,      681.6-.27, 81.6),     Vec(12,12,12), Vec(),            DIFF)); //Lite
 	}
 };

@@ -13,9 +13,9 @@ using namespace std;
 
 #include "llvm/Support/CommandLine.h"
 
-#include "vec.h"
-#include "ray.h"
-#include "object.h"
+// #include "vec.h"
+// #include "ray.h"
+// #include "object.h"
 #include "scene.h"
 
 

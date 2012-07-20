@@ -1,3 +1,6 @@
+#ifndef ___VEC___
+#define ___VEC___
+
 /**
  * Generic 3D vector
  */
@@ -68,7 +71,10 @@ struct Vec {
 	}
 }; 
 
+inline
 std::ostream& operator<<(std::ostream& os, const Vec& p) {
   os << "(" << p.x << "," << p.y << "," << p.z << ")";
   return os;
 }
+
+#endif//___VEC___
