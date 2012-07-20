@@ -102,7 +102,11 @@ struct Scene {
 					double dx = erand48(Xi)*space/2 - space/4;
 					double dy = erand48(Xi)*space/2 - space/4;
 					double dz = erand48(Xi)*space/2 - space/4;
-					objects.push_back(Sphere(space/5, Vec(cx+dx, cy+dy, cz+dz), Vec(), Vec(0.75, 0.75, 0.75), TYPE));
+
+					double tx = erand48(Xi)*0.75;
+					double ty = erand48(Xi)*0.75;
+					double tz = erand48(Xi)*0.75;
+					objects.push_back(Sphere(space/5, Vec(cx+dx, cy+dy, cz+dz), Vec(), Vec(tx, ty, tz), TYPE));
 					TYPE = (TYPE == REFR) ? SPEC : REFR;
 				}
 			}
