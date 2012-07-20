@@ -97,7 +97,6 @@ struct Scene {
 			for(uint y = 0; y < n; ++y, cy+=space) {
 				double cz = -100 + space/2;
 				for(uint z = 0; z < n; ++z, cz+=space) {
-					cout << "adding one" << endl;
 					objects.push_back(Sphere(10, Vec(cx, cy, cz), Vec(), Vec(0.75, 0.75, 0.75), TYPE));
 					TYPE = (TYPE == REFR) ? SPEC : REFR;
 				}
