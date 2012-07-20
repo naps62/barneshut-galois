@@ -12,3 +12,4 @@ inputs/*
 
 build/rls
 build/*.eps
+include/CGAL
