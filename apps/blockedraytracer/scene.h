@@ -88,7 +88,7 @@ struct Scene {
 		//objects.push_back(Sphere(1e5,  Vec(        0,         0, -1e5-half),  Vec(),  Vec(), DIFF)); //Frnt
 
 		objects.push_back(Sphere(300,  Vec(0, 300+half-0.5, -0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
-		objects.push_back(Sphere(20, Vec(-half, 0, -half), Vec(), Vec(0,1,0), DIFF));
+		//objects.push_back(Sphere(20, Vec(-half, 0, -half), Vec(), Vec(0,1,0), DIFF));
 
 		const double space = 100/n;
 
