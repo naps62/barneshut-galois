@@ -11,6 +11,7 @@ using namespace std;
 
 #include "Galois/Galois.h"
 #include "Galois/Statistic.h"
+#include <Galois/Runtime/ll/SimpleLock.h>
 #include "Lonestar/BoilerPlate.h"
 
 

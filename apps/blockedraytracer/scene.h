@@ -13,7 +13,6 @@ wrap(Image::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Pixel>());
 }
 
-
 /** Scene representation */
 struct Scene {
 
@@ -26,6 +25,8 @@ struct Scene {
 	Image img;
 	const uint spp;
 	const uint maxdepth;
+
+	Completeness completeness;
 
 	/**
 	 * Constructor
@@ -40,6 +41,7 @@ struct Scene {
 	  spp(_spp),
 	  maxdepth(_maxdepth) {
 
+	  	completeness.val = 0;
 		initScene(n);
 	}
 
@@ -55,7 +57,7 @@ struct Scene {
 		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
 		//
 		T_rayTrace.start();
-		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp, maxdepth));
+		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp, maxdepth, completeness));
 		T_rayTrace.stop();
 	}
 
@@ -103,9 +105,9 @@ struct Scene {
 					double dy = erand48(Xi)*space/2 - space/4;
 					double dz = erand48(Xi)*space/2 - space/4;
 
-					double tx = erand48(Xi)*0.75;
-					double ty = erand48(Xi)*0.75;
-					double tz = erand48(Xi)*0.75;
+					double tx = erand48(Xi)*0.65;
+					double ty = erand48(Xi)*0.65;
+					double tz = erand48(Xi)*0.65;
 					objects.push_back(Sphere(space/5, Vec(cx+dx, cy+dy, cz+dz), Vec(), Vec(tx, ty, tz), TYPE));
 					TYPE = (TYPE == REFR) ? SPEC : REFR;
 				}
