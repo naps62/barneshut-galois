@@ -33,7 +33,7 @@ struct Scene {
 	Scene(uint _w, uint _h, uint _spp, uint _maxdepth, uint n)
 	: //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
 	  //cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
-	  cam(Vec(0, 0, -309), Vec(0, -0.0, 1).norm()),
+	  cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm()),
 	  cx(_w * 0.5 / _h),
 	  cy((cx % cam.dir).norm() * 0.5),
 	  img(_w, _h),
@@ -85,10 +85,12 @@ struct Scene {
 		objects.push_back(Sphere(1e5,  Vec(        0,         0, 1e5+half),  Vec(),  Vec(.25,.55,.25), DIFF)); //Front
 		//objects.push_back(Sphere(1e5,  Vec(        0,         0, -1e5-half),  Vec(),  Vec(), DIFF)); //Frnt
 
-		objects.push_back(Sphere(300,  Vec(0, 300+half-0.5, -50), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
-		objects.push_back(Sphere(2, Vec(50, 50, 50), Vec(), Vec(0,1,0), DIFF));
+		objects.push_back(Sphere(300,  Vec(0, 300+half-0.5, -0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
+		objects.push_back(Sphere(20, Vec(-half, 0, -half), Vec(), Vec(0,1,0), DIFF));
 
 		const double space = 100/n;
+
+		unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(n)};
 
 		Refl_t TYPE=REFR;
 		double cx = -50 + space/2;
@@ -97,7 +99,10 @@ struct Scene {
 			for(uint y = 0; y < n; ++y, cy+=space) {
 				double cz = -100 + space/2;
 				for(uint z = 0; z < n; ++z, cz+=space) {
-					objects.push_back(Sphere(10, Vec(cx, cy, cz), Vec(), Vec(0.75, 0.75, 0.75), TYPE));
+					double dx = erand48(Xi)*space/2 - space/4;
+					double dy = erand48(Xi)*space/2 - space/4;
+					double dz = erand48(Xi)*space/2 - space/4;
+					objects.push_back(Sphere(space/5, Vec(cx+dx, cy+dy, cz+dz), Vec(), Vec(0.75, 0.75, 0.75), TYPE));
 					TYPE = (TYPE == REFR) ? SPEC : REFR;
 				}
 			}
