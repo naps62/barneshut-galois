@@ -126,10 +126,10 @@ struct Scene {
 		root = buildBVHTree(NULL, tmp_objects, 0, objects.size() - 1, 0);
 
 		for(uint i = 0; i < objects.size(); ++i) {
-			//delete objects[i];
-			//objects[i] = tmp_objects[i];
+			delete objects[i];
+			objects[i] = tmp_objects[i];
 		}
-		//objects = tmp_objects;
+		objects = tmp_objects;
 		return root;
 	}
 
@@ -167,9 +167,8 @@ struct Scene {
 		newNode->parent = parent;
 
 		if (count <= 2) {
-			//Object* o1 = new Sphere(*static_cast<Sphere*>(objects[start]));
-			//new_objects.push_back(o1);
-			Object* o1 = objects[start];
+			Object* o1 = new Sphere(*static_cast<Sphere*>(objects[start]));
+			new_objects.push_back(o1);
 			
 		
 			newNode->leaf = true;
@@ -179,9 +178,8 @@ struct Scene {
 			newNode->updateTreeBox(o1->box());
 
 			if (count == 2) {
-				//Object* o2 = new Sphere(*static_cast<Sphere*>(objects[start + 1]));
-				//new_objects.push_back(o2);
-				Object* o2 = objects[start + 1];
+				Object* o2 = new Sphere(*static_cast<Sphere*>(objects[start + 1]));
+				new_objects.push_back(o2);
 				newNode->updateTreeBox(o2->box());
 				newNode->childs[1] = o2;
 			} else {
