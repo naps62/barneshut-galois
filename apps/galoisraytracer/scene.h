@@ -13,11 +13,8 @@ wrap(Image::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Pixel>());
 }
 
-
 /** Scene representation */
 struct Scene {
-	// total size of the scene
-	Vec size;
 
 	Ray cam;
 	Vec cx;
@@ -29,20 +26,23 @@ struct Scene {
 	const uint spp;
 	const uint maxdepth;
 
+	Completeness completeness;
+
 	/**
 	 * Constructor
 	 */
-	Scene(uint _w, int _h, Vec _size, uint _spp, uint _maxdepth)
-	: size(_size),
-	  //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
-	  cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
-	  cx(_w * 0.5135 / _h),
-	  cy((cx % cam.dir).norm() * 0.5135),
+	Scene(uint _w, uint _h, uint _spp, uint _maxdepth, uint n)
+	: //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
+	  //cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
+	  cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm()),
+	  cx(_w * 0.5 / _h),
+	  cy((cx % cam.dir).norm() * 0.5),
 	  img(_w, _h),
 	  spp(_spp),
 	  maxdepth(_maxdepth) {
 
-		initScene(size);
+	  	completeness.val = 0;
+		initScene(n);
 	}
 
 	/**
@@ -57,7 +57,7 @@ struct Scene {
 		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
 		//
 		T_rayTrace.start();
-		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp, maxdepth));
+		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp, maxdepth, completeness));
 		T_rayTrace.stop();
 	}
 
@@ -66,7 +66,7 @@ struct Scene {
 		ofstream fs(file);
 		fs << "P3" << endl << img.width << " " << img.height << "\n" << 255 << endl;
 		for (int i=0; i < (img.width * img.height); i++) 
-			fs << toInt(img[i].x) << " " << toInt(img[i].y) << " " << toInt(img[i].y) << " ";
+			fs << toInt(img[i].x) << " " << toInt(img[i].y) << " " << toInt(img[i].z) << " ";
 		fs.close();
 	}
 
@@ -76,15 +76,42 @@ struct Scene {
 	private:
 
 	/** initializes scene with some objects */
-	void initScene(const Vec& size) {
-		objects.push_back(Sphere(1e5,  Vec( 1e5+1,  40.8,      81.6),     Vec(),         Vec(.75,.25,.25), DIFF)); //Left
-		objects.push_back(Sphere(1e5,  Vec(-1e5+99, 40.8,      81.6),     Vec(),         Vec(.25,.25,.75), DIFF)); //Rght
-		objects.push_back(Sphere(1e5,  Vec(50,      40.8,      1e5),      Vec(),         Vec(.75,.75,.75), DIFF)); //Back
-		objects.push_back(Sphere(1e5,  Vec(50,      40.8,     -1e5+170),  Vec(),         Vec(),            DIFF)); //Frnt
-		objects.push_back(Sphere(1e5,  Vec(50,      1e5,       81.6),     Vec(),         Vec(.75,.75,.75), DIFF)); //Botm
-		objects.push_back(Sphere(1e5,  Vec(50,     -1e5+81.6,  81.6),     Vec(),         Vec(.75,.75,.75), DIFF)); //Top
-		objects.push_back(Sphere(16.5, Vec(27,      16.5,      47),       Vec(),         Vec(1,1,1)*.999,  SPEC)); //Mirr
-		objects.push_back(Sphere(16.5, Vec(73,      16.5,      78),       Vec(),         Vec(1,1,1)*.999,  REFR)); //Glas
-		objects.push_back(Sphere(600,  Vec(50,      681.6-.27, 81.6),     Vec(12,12,12), Vec(),            DIFF)); //Lite
+	void initScene(uint n) {
+		const double side = 100;
+		const double half = side / 2;
+
+		objects.push_back(Sphere(1e5,  Vec( 1e5+half,         0,        0),  Vec(),  Vec(.75,.25,.25), DIFF)); //Left
+		objects.push_back(Sphere(1e5,  Vec(-1e5-half,         0,        0),  Vec(),  Vec(.25,.25,.75), DIFF)); //Rght
+		objects.push_back(Sphere(1e5,  Vec(        0,  1e5+half,        0),  Vec(),  Vec(.75,.75,.75), DIFF)); //Botm
+		objects.push_back(Sphere(1e5,  Vec(        0, -1e5-half,        0),  Vec(),  Vec(.75,.75,.75), DIFF)); //Top
+		objects.push_back(Sphere(1e5,  Vec(        0,         0, 1e5+half),  Vec(),  Vec(.25,.55,.25), DIFF)); //Front
+		//objects.push_back(Sphere(1e5,  Vec(        0,         0, -1e5-half),  Vec(),  Vec(), DIFF)); //Frnt
+
+		objects.push_back(Sphere(300,  Vec(0, 300+half-0.5, -0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
+		//objects.push_back(Sphere(20, Vec(-half, 0, -half), Vec(), Vec(0,1,0), DIFF));
+
+		const double space = 100/n;
+
+		unsigned short Xi[3] = {0, 0, static_cast<unsigned short>(n)};
+
+		Refl_t TYPE=REFR;
+		double cx = -50 + space/2;
+		for(uint x = 0; x < n; ++x, cx+=space) {
+			double cy = -50 + space/2;
+			for(uint y = 0; y < n; ++y, cy+=space) {
+				double cz = -100 + space/2;
+				for(uint z = 0; z < n; ++z, cz+=space) {
+					double dx = erand48(Xi)*space/2 - space/4;
+					double dy = erand48(Xi)*space/2 - space/4;
+					double dz = erand48(Xi)*space/2 - space/4;
+
+					double tx = erand48(Xi)*0.65;
+					double ty = erand48(Xi)*0.65;
+					double tz = erand48(Xi)*0.65;
+					objects.push_back(Sphere(space/5, Vec(cx+dx, cy+dy, cz+dz), Vec(), Vec(tx, ty, tz), TYPE));
+					TYPE = (TYPE == REFR) ? SPEC : REFR;
+				}
+			}
+		}
 	}
 };

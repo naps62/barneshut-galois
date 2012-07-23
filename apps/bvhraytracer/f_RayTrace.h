@@ -86,7 +86,7 @@ struct RayTrace {
 			return Vec();
 
 		// the hit object 
-		const Sphere &obj = objects[id];
+		const Sphere &obj = *static_cast<Sphere*>(objects[id]);
 		Vec f         = obj.color;
 
 		//Russian Roullete to stop
@@ -116,7 +116,7 @@ struct RayTrace {
 				double r2s = sqrt(r2);
 
 				Vec w   = nl;
-				Vec u   = ((fabs(w.x) > 0.1 ? Vec(0, 1) : Vec(1)) % w).norm();
+				Vec u   = ((fabs(w.x) > 0.1 ? Vec((double)0, 1) : Vec(1)) % w).norm();
 				Vec v   = w % u;
 				Vec dir = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm(); 
 
@@ -181,7 +181,7 @@ struct RayTrace {
 		dist       = 1e20; 
 
 		for (uint i = size; i--;) {
-			double d = objects[i].intersect(r);
+			double d = objects[i]->intersect(r);
 			if(d && d < dist){
 				dist = d;
 				id   = i;

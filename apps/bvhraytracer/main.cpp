@@ -3,10 +3,12 @@
 //        Remove "-fopenmp" for g++ version < 4.2 
 
 #include <cmath>
+#include <algorithm>
 #include <limits>
 #include <stdlib.h>
 #include <fstream>
 #include <string>
+#include <set>
 using namespace std;
 
 #include "Galois/Galois.h"
@@ -17,7 +19,9 @@ using namespace std;
 
 #include "vec.h"
 #include "ray.h"
+#include "bounding_box.h"
 #include "object.h"
+#include "bvh.h"
 #include "image.h"
 
 /** clamps a value between 0 and 1 */
@@ -34,7 +38,7 @@ inline int toInt(double x) {
 
 
 typedef vector<Ray> Rays;
-typedef vector<Sphere> ObjectList;
+typedef vector<Object*> ObjectList;
 
 #include "f_RayTrace.h"
 #include "f_ClampImage.h"
@@ -51,6 +55,8 @@ static llvm::cl::opt<uint>   maxdepth("d",    llvm::cl::desc("Max ray depth"),  
 static llvm::cl::opt<string> outfile ("out",  llvm::cl::desc("Output file"),         llvm::cl::init(string("image.ppm")));
 static llvm::cl::opt<int>    seed    ("seed", llvm::cl::desc("Random seed"),         llvm::cl::init(7));
 static llvm::cl::opt<uint>   n       ("n",    llvm::cl::desc("Number of spheres"),   llvm::cl::init(2));
+
+
 
 /***********************************************************
  * MAIN
@@ -71,7 +77,7 @@ int main(int argc, char *argv[]) {
 					<< std::endl << std::endl;
 
 	std::cout << "Num. of threads: " << numThreads << std::endl;
-
+	
 
 	Galois::StatTimer T("Total");
 	T.start();

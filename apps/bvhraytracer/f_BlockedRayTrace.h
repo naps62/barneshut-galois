@@ -1,29 +1,24 @@
-struct Completeness {
-	GaloisRuntime::LL::SimpleLock<true> lock;
-	uint val;
-};
-
-
 /**
  * Functor
  *
- * Compute radiance for all rays
+ * Compute radiance for all rays, in blocks
  */
-struct RayTrace {
+struct BlockedRayTrace {
 	typedef int tt_does_not_need_stats;
 	typedef int tt_does_not_need_aborts;
 
 	const Ray& cam;
 	const Vec& cx;
 	const Vec& cy;
+
+	// this will be an octree
 	const ObjectList& objects;
 	Image& img;
 	const uint spp;
 	const double contrib;
 	const uint maxdepth;
-	Completeness& completeness;
 
-	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
+	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, Image& _img, const uint _spp, const uint _maxdepth)
 		: cam(_cam),
 		  cx(_cx),
 		  cy(_cy),
@@ -31,8 +26,7 @@ struct RayTrace {
 		  img(_img),
 		  spp(_spp),
 		  contrib(1.0 / spp),
-		  maxdepth(_maxdepth),
-		  completeness(_completeness) { }
+		  maxdepth(_maxdepth) { }
 
 	template<typename Context>
 	void operator()(Pixel* p, Context&) {
@@ -64,10 +58,6 @@ struct RayTrace {
 				pixel += Vec(clamp(rad.x), clamp(rad.y), clamp(rad.z)) * 0.25;
 			}
 		}
-
-		completeness.lock.lock();
-			cerr << "\rRendering (" << spp * 4 << " spp) " << (100.0 * ++completeness.val / (img.size())) << '%';
-		completeness.lock.unlock();
 	}
 
 	private:
