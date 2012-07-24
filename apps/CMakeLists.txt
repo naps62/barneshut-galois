@@ -1,8 +1,8 @@
-#add_subdirectory(barneshut)
-#add_subdirectory(barneshutold)
-#add_subdirectory(barneshutclean)
-#add_subdirectory(barneshutpointblocked)
-#add_subdirectory(barneshutorderedblocked)
+#add_subdirectory(10_barneshutold)
+#add_subdirectory(11_barneshut)
+#add_subdirectory(12_barneshutclean)
+#add_subdirectory(13_barneshutpointblocked)
+#add_subdirectory(14_barneshutorderedblocked)
 
 add_subdirectory(21_raytracer)
 add_subdirectory(22_raytracerclean)
