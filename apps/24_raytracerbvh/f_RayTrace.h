@@ -144,7 +144,7 @@ struct RayTrace {
 				Ray reflRay(hit_point, r.dir - norm * 2 * norm.dot(r.dir));
 				// Ray from outside going in?
 				bool into    = norm.dot(nl) > 0;
-				double nc    = 1
+				double nc    = 1;
 				double nt    = 1.5;
 				double nnt   = into ? nc / nt : nt / nc;
 				double ddn   = r.dir.dot(nl);

@@ -4,9 +4,9 @@
 #add_subdirectory(barneshutpointblocked)
 #add_subdirectory(barneshutorderedblocked)
 
-add_subdirectory(raytracer)
-add_subdirectory(raytracerclean)
-add_subdirectory(raytracergalois)
-add_subdirectory(raytracerbvh)
+add_subdirectory(21_raytracer)
+add_subdirectory(22_raytracerclean)
+add_subdirectory(23_raytracergalois)
+add_subdirectory(24_raytracerbvh)
 
 #add_subdirectory(pointcorrelation)
