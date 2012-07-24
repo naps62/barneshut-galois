@@ -33,35 +33,21 @@ struct BVHTree : BoundingBox {
 uint BVHTree::nextId = 0;
 
 std::ostream& operator<<(std::ostream& os, const BVHTree p) {
-
-		os << "\t" << p.id << " [width=.5,height=1,style=filled,color=\".5 .5 .5\",shape=box,label=\"" << p.id << ",\\n" << p.min << ",\\n" << p.max << "\"];" << endl;
-		if (p.leaf) {
-			for(uint i = 0; i < 2; ++i) {
-				Sphere* o = static_cast<Sphere*>(p.childs[i]);
-				if (o)
-					os << "\t" << p.id << " -> " << "b" << o->id << endl << *o;
-			}
-			os << endl;
-		} else {
-			for(uint i = 0; i < 2; ++i) {
-				BVHTree& o = *static_cast<BVHTree*>(p.childs[i]);
-				os << "\t" << p.id << " -> " << o.id << endl << o;
-			}
-			os << endl;
+	os << "\t" << p.id << " [width=.5,height=1,style=filled,color=\".5 .5 .5\",shape=box,label=\"" << p.id << ",\\n" << p.min << ",\\n" << p.max << "\"];" << endl;
+	if (p.leaf) {
+		for(uint i = 0; i < 2; ++i) {
+			Sphere* o = static_cast<Sphere*>(p.childs[i]);
+			if (o) os << "\t" << p.id << " -> " << "b" << o->id << endl << *o;
 		}
-
-	return os;
-	/*os << "{" << p.min << ", " << p.max << ", ";
-	for(uint i = 0; i <= 1; ++i) {
-		if (p.childs[i]) {
-			if (p.leaf) os << *(static_cast<Sphere*>(p.childs[i]));
-			else			os << *static_cast<BVHTree*>(p.childs[i]);
+		os << endl;
+	} else {
+		for(uint i = 0; i < 2; ++i) {
+			BVHTree& o = *static_cast<BVHTree*>(p.childs[i]);
+			os << "\t" << p.id << " -> " << o.id << endl << o;
 		}
-		os << "\t";
+		os << endl;
 	}
-	os << "}";
-
-	return os;*/
+	return os;
 }
 
 void BVHTree::dump(std::ostream& os) {

@@ -17,23 +17,26 @@ struct RayTrace {
 	const Vec& cx;
 	const Vec& cy;
 	const ObjectList& objects;
+	const BVHNode* root;
 	Image& img;
 	const uint spp;
 	const double contrib;
 	const uint maxdepth;
 	Completeness& completeness;
 
-	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
+	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, const BVHNode* _root, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
 		: cam(_cam),
 		  cx(_cx),
 		  cy(_cy),
 		  objects(_objects),
+		  root(_root),
 		  img(_img),
 		  spp(_spp),
 		  contrib(1.0 / spp),
 		  maxdepth(_maxdepth),
 		  completeness(_completeness) { }
 
+	// receive a block of pixels instead
 	template<typename Context>
 	void operator()(Pixel* p, Context&) {
 		Pixel& pixel = *p;
@@ -45,6 +48,7 @@ struct RayTrace {
 		/** To blockalize:
 		  *    generate a block of rays and call radiance for each one after size is met
 		       probably each block can have a common Xi? */
+		radiance(Ray(Vec(0, 0, 0), Vec(0, 0, 1)), 0, Xi);
 		for(uint sy = 0; sy < 2; ++sy) {
 			for(uint sx = 0; sx < 2; ++sx, rad = Vec()) {
 				for(uint sample = 0; sample < spp; ++sample) {
@@ -58,6 +62,7 @@ struct RayTrace {
 							 	 cam.dir; 
 					Vec pos = cam.orig + dir * 140;
 
+					// instead of computing radiance, insert ray into a block (use the same Xi for the entire block, and compare results)
 					rad += radiance(Ray(pos, dir.norm()), 0, Xi) * contrib;
 
 				}
@@ -74,6 +79,7 @@ struct RayTrace {
 	/** compute total radiance for a ray */
 	/** To blockalize:
 	 *     receive a block of rays rather than a single one */
+	// receive a block of rays
 	Vec radiance(const Ray &r, uint depth, unsigned short *Xi){ 
 		// distance to intersection 
 		double dist;
@@ -86,7 +92,7 @@ struct RayTrace {
 			return Vec();
 
 		// the hit object 
-		const Sphere &obj = objects[id];
+		const Sphere &obj = *static_cast<Sphere*>(objects[id]);
 		Vec f         = obj.color;
 
 		//Russian Roullete to stop
@@ -116,7 +122,7 @@ struct RayTrace {
 				double r2s = sqrt(r2);
 
 				Vec w   = nl;
-				Vec u   = ((fabs(w.x) > 0.1 ? Vec(0, 1) : Vec(1)) % w).norm();
+				Vec u   = ((fabs(w.x) > 0.1 ? Vec((double)0, 1) : Vec(1)) % w).norm();
 				Vec v   = w % u;
 				Vec dir = (u * cos(r1) * r2s + v * sin(r1) * r2s + w * sqrt(1 - r2)).norm(); 
 
@@ -138,7 +144,8 @@ struct RayTrace {
 				Ray reflRay(hit_point, r.dir - norm * 2 * norm.dot(r.dir));
 				// Ray from outside going in?
 				bool into    = norm.dot(nl) > 0;
-				double nc    = 1, nt  = 1.5;
+				double nc    = 1;
+				double nt    = 1.5;
 				double nnt   = into ? nc / nt : nt / nc;
 				double ddn   = r.dir.dot(nl);
 				double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
@@ -163,6 +170,7 @@ struct RayTrace {
 					Vec refrResult;
 
 					if (depth > 2) { // if ray is deep enough, consider only one of the contributions
+						// what about blocks? try to generate always a single ray, and compare results
 						if (erand48(Xi) < P) refrResult = radiance(reflRay, depth, Xi) * RP;
 						else                 refrResult = radiance(refrRay, depth, Xi) * TP;
 					} else { // otherwise, sum both
@@ -174,19 +182,41 @@ struct RayTrace {
 		}
 	}
 
-	/** given a ray, calc which object it intersects with */
-	inline bool intersect(const Ray &r, double &dist, int &id){ 
-		double size = objects.size();
-		double inf = 1e20;
-		dist       = 1e20; 
+	inline bool intersect(const Ray& r, double &dist, int &id) {
+		return recurseTree(root, r, dist, id);
+	}
 
-		for (uint i = size; i--;) {
-			double d = objects[i].intersect(r);
-			if(d && d < dist){
+	inline bool recurseTree(const BVHNode* tree, const Ray& ray, double &dist, int &id) {
+		const double inf = 1e20;
+		double d;
+		dist = inf;
+
+		if (! tree->box.isIntersected(ray)) {
+			return false;
+		}
+
+		if (tree->leaf) {
+			for (uint i = 0; i < 2; ++i) {
+				Object* obj = static_cast<Object*>(tree->childs[i]);
+				if (obj && (d = obj->intersect(ray)) && d < dist) {
+					dist = d;
+					id   = obj->id;
+				}
+			}
+		} else {
+			double d;
+			int inner_id;
+			// recurse to left branch
+			if (recurseTree(static_cast<BVHNode*>(tree->childs[0]), ray, d, inner_id) && d < dist) {
 				dist = d;
-				id   = i;
+				id = inner_id;
+			}
+			// recurse to right branch
+			if (recurseTree(static_cast<BVHNode*>(tree->childs[1]), ray, d, inner_id) && d < dist) {
+				dist = d;
+				id = inner_id;
 			}
 		}
-		return dist < inf; 
+		return dist < inf;
 	}
 };

@@ -1,0 +1,4 @@
+add_subdirectory(structs)
+
+app(raytracerstructured)
+target_link_libraries(raytracerstructured STRUCTS)
