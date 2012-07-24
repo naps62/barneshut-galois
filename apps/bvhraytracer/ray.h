@@ -12,8 +12,9 @@ struct Ray {
 	 	  dir(_dir) {
 
 	 	  father = -1;
-
 	}
+
+	Vec operator() (double t) const { return orig + dir * t; }
 }; 
 
 std::ostream& operator<<(std::ostream& os, const Ray& r) {

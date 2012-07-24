@@ -10,6 +10,7 @@ struct Object {
 
 	// reflection type (DIFFuse, SPECular, REFRactive)
 	Refl_t refl;
+	uint id;
 
 	/** Constructor */
 	Object(Vec _pos, Vec _emission, Vec _color, Refl_t _refl)
@@ -22,7 +23,8 @@ struct Object {
 		:	pos(c.pos),
 			emission(c.emission),
 			color(c.color),
-			refl(c.refl) { }
+			refl(c.refl),
+			id(c.id) { }
 
 	/**
 	 * detects an intersection of a ray with this object
@@ -77,7 +79,13 @@ struct Sphere : public Object {
 };
 
 std::ostream& operator<<(std::ostream& os, const Sphere p) {
-	os << "Sphere {" << p.rad << ", " << p.pos << "}";
+	BoundingBox box = p.box();
+
+	os << "\t" << "b" << p.id << " [width=.5,height=1,style=filled,color=\".5 .5 .5\",shape=box,label=\"" << box.min << ",\\n" << box.max << "\"];" << endl
+		<< "\t" << "b" << p.id << " -> " << "o" << p.id << endl
+		<< "\t" << "o" << p.id <<  " [label=\"(" << p.rad << ",\\n" << p.pos << ")\"];" << endl;
+		
+	
 
 	return os;
 }

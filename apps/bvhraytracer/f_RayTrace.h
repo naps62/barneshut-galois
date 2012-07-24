@@ -17,17 +17,19 @@ struct RayTrace {
 	const Vec& cx;
 	const Vec& cy;
 	const ObjectList& objects;
+	const BVHTree* root;
 	Image& img;
 	const uint spp;
 	const double contrib;
 	const uint maxdepth;
 	Completeness& completeness;
 
-	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
+	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, const BVHTree* _root, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
 		: cam(_cam),
 		  cx(_cx),
 		  cy(_cy),
 		  objects(_objects),
+		  root(_root),
 		  img(_img),
 		  spp(_spp),
 		  contrib(1.0 / spp),
@@ -45,6 +47,7 @@ struct RayTrace {
 		/** To blockalize:
 		  *    generate a block of rays and call radiance for each one after size is met
 		       probably each block can have a common Xi? */
+		radiance(Ray(Vec(0, 0, 0), Vec(0, 0, 1)), 0, Xi);
 		for(uint sy = 0; sy < 2; ++sy) {
 			for(uint sx = 0; sx < 2; ++sx, rad = Vec()) {
 				for(uint sample = 0; sample < spp; ++sample) {
@@ -74,7 +77,7 @@ struct RayTrace {
 	/** compute total radiance for a ray */
 	/** To blockalize:
 	 *     receive a block of rays rather than a single one */
-	Vec radiance(const Ray &r, int depth, unsigned short *Xi){ 
+	Vec radiance(const Ray &r, uint depth, unsigned short *Xi){ 
 		// distance to intersection 
 		double dist;
 
@@ -174,19 +177,41 @@ struct RayTrace {
 		}
 	}
 
-	/** given a ray, calc which object it intersects with */
-	inline bool intersect(const Ray &r, double &dist, int &id){ 
-		double size = objects.size();
-		double inf = 1e20;
-		dist       = 1e20; 
+	inline bool intersect(const Ray& r, double &dist, int &id) {
+		return recurseTree(root, r, dist, id);
+	}
 
-		for (uint i = size; i--;) {
-			double d = objects[i]->intersect(r);
-			if(d && d < dist){
+	inline bool recurseTree(const BVHTree* tree, const Ray& ray, double &dist, int &id) {
+		const double inf = 1e20;
+		double d;
+		dist = inf;
+
+		if (! tree->isIntersected(ray)) {
+			return false;
+		}
+
+		if (tree->leaf) {
+			for (uint i = 0; i < 2; ++i) {
+				Object* obj = static_cast<Object*>(tree->childs[i]);
+				if (obj && (d = obj->intersect(ray)) && d < dist) {
+					dist = d;
+					id   = obj->id;
+				}
+			}
+		} else {
+			double d;
+			int inner_id;
+			// recurse to left branch
+			if (recurseTree(static_cast<BVHTree*>(tree->childs[0]), ray, d, inner_id) && d < dist) {
 				dist = d;
-				id   = i;
+				id = inner_id;
+			}
+			// recurse to right branch
+			if (recurseTree(static_cast<BVHTree*>(tree->childs[1]), ray, d, inner_id) && d < dist) {
+				dist = d;
+				id = inner_id;
 			}
 		}
-		return dist < inf; 
+		return dist < inf;
 	}
 };

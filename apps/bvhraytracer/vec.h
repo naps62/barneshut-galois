@@ -13,6 +13,7 @@ struct Vec {
 
 	Vec(bool, double val) : x(val), y(val), z(val) { }
 
+
 	/**
 	 * Operators
 	 */
@@ -50,8 +51,7 @@ struct Vec {
 
 	Vec operator-(double b)     const { return Vec(x - b,   y - b,   z - b);   } 
 	Vec operator+(double b)     const { return Vec(x + b,   y + b,   z + b);   } 
-	Vec operator*(double b)     const { return Vec(x * b, y * b, z * b); } 
-	
+	Vec operator*(double b)     const { return Vec(x * b, y * b, z * b); } 	
 	
 	/**
 	 * other
@@ -77,6 +77,24 @@ struct Vec {
 	}
 	Vec max(const Vec& v) {
 		return Vec(std::max(x, v.x), std::max(y, v.y), std::max(z, v.z));
+	}
+
+	
+	double lengthSquared () const { return x * x + y * y + z * z; }
+	double length () const { return sqrt(lengthSquared()); }
+
+	double distanceSquared (const Vec& v) const {
+		return (*this - v).lengthSquared();
+	}
+	double distance (const Vec& v) const {
+		return sqrt(distanceSquared(v));
+	}
+
+	Vec& mapDivSelf(const Vec& v) { x /= v.x; y /= v.y; z /= v.z; return *this; }
+	Vec mapDiv(const Vec& v) {
+		Vec r(*this);
+		r.mapDivSelf(v);
+		return r;
 	}
 }; 
 

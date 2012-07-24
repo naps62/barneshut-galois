@@ -34,7 +34,7 @@ struct Scene {
 	/**
 	 * Constructor
 	 */
-	Scene(uint _w, uint _h, uint _spp, uint _maxdepth, uint n)
+	Scene(uint _w, uint _h, uint _spp, uint _maxdepth, uint n, bool dump=false)
 	: //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
 	  //cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
 	  cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm()),
@@ -46,6 +46,10 @@ struct Scene {
 
 	  	completeness.val = 0;
 		initScene(n);
+
+		if (dump)
+			root->dump(cout);
+		//cout << root->intersect(Ray(Vec(0, 0, -1e2), Vec(0, 0, 1e6))) << endl;
 	}
 
 	/**
@@ -60,7 +64,7 @@ struct Scene {
 		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
 		//
 		T_rayTrace.start();
-		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, img, spp, maxdepth, completeness));
+		Galois::for_each(wrap(img.begin()), wrap(img.end()), RayTrace(cam, cx, cy, objects, root, img, spp, maxdepth, completeness));
 		T_rayTrace.stop();
 	}
 
@@ -84,7 +88,7 @@ struct Scene {
 		root = buildBVHTree();
 	}
 
-	void allocSpheres(int n) {
+	void allocSpheres(uint n) {
 		const double side = 100;
 		const double half = side / 2;
 
@@ -95,6 +99,13 @@ struct Scene {
 		objects.push_back(new Sphere(1e5,  Vec(        0,         0, 1e5+half),  Vec(),  Vec(.25,.55,.25), DIFF)); //Front
 
 		objects.push_back(new Sphere(300,  Vec(0, 300+half-0.5, -0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
+		/*objects.push_back(new Sphere(5,  Vec(0, 0, 0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
+		objects.push_back(new Sphere(5,  Vec(10, 10, 10), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
+		objects.push_back(new Sphere(5,  Vec(-10, -10, -10), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
+		objects.push_back(new Sphere(5,  Vec(-10, 10, 10), Vec(22,22,22), Vec(1, 1, 1),    DIFF));*/
+
+		if (n == 0)
+			return;
 
 		const double space = 100/n;
 
@@ -128,6 +139,7 @@ struct Scene {
 		for(uint i = 0; i < objects.size(); ++i) {
 			delete objects[i];
 			objects[i] = tmp_objects[i];
+			objects[i]->id = i;
 		}
 		objects = tmp_objects;
 		return root;
@@ -191,7 +203,6 @@ struct Scene {
 			axis = (axis == 2) ? 0 : axis+1;
 
 			newNode->leaf = false;
-			cerr << start << " " << center << " " << end << " " << axis << endl;
 			newNode->childs[0] = buildBVHTree(newNode, new_objects, start, center-1, axis);
 			newNode->childs[1] = buildBVHTree(newNode, new_objects, center, end, axis);
 		}

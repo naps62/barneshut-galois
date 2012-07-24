@@ -55,6 +55,7 @@ static llvm::cl::opt<uint>   maxdepth("d",    llvm::cl::desc("Max ray depth"),  
 static llvm::cl::opt<string> outfile ("out",  llvm::cl::desc("Output file"),         llvm::cl::init(string("image.ppm")));
 static llvm::cl::opt<int>    seed    ("seed", llvm::cl::desc("Random seed"),         llvm::cl::init(7));
 static llvm::cl::opt<uint>   n       ("n",    llvm::cl::desc("Number of spheres"),   llvm::cl::init(2));
+static llvm::cl::opt<uint>   dump    ("dump", llvm::cl::desc("Dump BVH Tree"),       llvm::cl::init(false));
 
 
 
@@ -81,7 +82,7 @@ int main(int argc, char *argv[]) {
 
 	Galois::StatTimer T("Total");
 	T.start();
-	Scene scene(width, height, spp, maxdepth, n);
+	Scene scene(width, height, spp, maxdepth, n, dump);
 	scene.raytrace();
 	scene.save(outfile);
 	T.stop();
