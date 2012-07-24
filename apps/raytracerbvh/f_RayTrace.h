@@ -36,6 +36,7 @@ struct RayTrace {
 		  maxdepth(_maxdepth),
 		  completeness(_completeness) { }
 
+	// receive a block of pixels instead
 	template<typename Context>
 	void operator()(Pixel* p, Context&) {
 		Pixel& pixel = *p;
@@ -61,6 +62,7 @@ struct RayTrace {
 							 	 cam.dir; 
 					Vec pos = cam.orig + dir * 140;
 
+					// instead of computing radiance, insert ray into a block (use the same Xi for the entire block, and compare results)
 					rad += radiance(Ray(pos, dir.norm()), 0, Xi) * contrib;
 
 				}
@@ -77,6 +79,7 @@ struct RayTrace {
 	/** compute total radiance for a ray */
 	/** To blockalize:
 	 *     receive a block of rays rather than a single one */
+	// receive a block of rays
 	Vec radiance(const Ray &r, uint depth, unsigned short *Xi){ 
 		// distance to intersection 
 		double dist;
@@ -141,7 +144,8 @@ struct RayTrace {
 				Ray reflRay(hit_point, r.dir - norm * 2 * norm.dot(r.dir));
 				// Ray from outside going in?
 				bool into    = norm.dot(nl) > 0;
-				double nc    = 1, nt  = 1.5;
+				double nc    = 1
+				double nt    = 1.5;
 				double nnt   = into ? nc / nt : nt / nc;
 				double ddn   = r.dir.dot(nl);
 				double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
@@ -166,6 +170,7 @@ struct RayTrace {
 					Vec refrResult;
 
 					if (depth > 2) { // if ray is deep enough, consider only one of the contributions
+						// what about blocks? try to generate always a single ray, and compare results
 						if (erand48(Xi) < P) refrResult = radiance(reflRay, depth, Xi) * RP;
 						else                 refrResult = radiance(refrRay, depth, Xi) * TP;
 					} else { // otherwise, sum both
