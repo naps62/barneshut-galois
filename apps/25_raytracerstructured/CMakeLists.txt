@@ -1,4 +1,5 @@
 add_subdirectory(structs)
 
-app(raytracerstructured)
+app(raytracerstructured main.cpp Config.cpp)
+
 target_link_libraries(raytracerstructured STRUCTS)

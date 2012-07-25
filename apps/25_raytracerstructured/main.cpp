@@ -3,21 +3,13 @@
 //        Remove "-fopenmp" for g++ version < 4.2 
 
 #include <cmath>
-#include <algorithm>
-#include <limits>
 #include <stdlib.h>
-#include <fstream>
-#include <string>
-#include <set>
-using namespace std;
+#include <vector>
 
 #include "Galois/Galois.h"
 #include "Galois/Statistic.h"
-#include <Galois/Runtime/ll/SimpleLock.h>
 #include "Lonestar/BoilerPlate.h"
 
-
-#include "structs/All.h"
 
 /** clamps a value between 0 and 1 */
 inline double clamp(double x) {
@@ -32,55 +24,45 @@ inline int toInt(double x) {
 } 
 
 
-typedef vector<Ray> Rays;
-typedef vector<Object*> ObjectList;
-
-#include "f_RayTrace.h"
+#include "structs/All.h"
+#include "Config.h"
 #include "f_ClampImage.h"
+#include "f_RayTrace.h"
+
+Config config;
+
+typedef std::vector<Ray> Rays;
+typedef std::vector<Object*> ObjectList;
+
 #include "scene.h"
-
-const char* name = "RayTracing";
-const char* desc = "Simple ray tracing implementation using octree for scene indexing\n";
-const char* url  = "raytracing";
-
-static llvm::cl::opt<uint>   width   ("w",    llvm::cl::desc("Output image width"),  llvm::cl::init( 1024));
-static llvm::cl::opt<uint>   height  ("h",    llvm::cl::desc("Output image height"), llvm::cl::init(  768));
-static llvm::cl::opt<uint>   spp     ("spp",  llvm::cl::desc("Samples per pixel"),   llvm::cl::init(    4));
-static llvm::cl::opt<uint>   maxdepth("d",    llvm::cl::desc("Max ray depth"),       llvm::cl::init(    5));
-static llvm::cl::opt<int>    seed    ("seed", llvm::cl::desc("Random seed"),         llvm::cl::init(    7));
-static llvm::cl::opt<uint>   n       ("n",    llvm::cl::desc("Number of spheres"),   llvm::cl::init(    2));
-static llvm::cl::opt<uint>   dump    ("dump", llvm::cl::desc("Dump BVH Tree"),       llvm::cl::init(false));
-static llvm::cl::opt<string> outfile ("out",  llvm::cl::desc("Output file"),         llvm::cl::init(string("image.ppm")));
-
 
 
 /***********************************************************
  * MAIN
  **********************************************************/
-// Usage: time ./smallpt 5000 && xv image.ppm
 int main(int argc, char *argv[]) {
 	Galois::StatManager M;
-	LonestarStart(argc, argv, name, desc, url);
+	LonestarStart(argc, argv, "Ray Tracing");
 
-	cerr << fixed;
-	cerr.width(2);
-	cerr.precision(2);
-	cerr << endl;
+	std::cerr << std::fixed;
+	std::cerr.width(2);
+	std::cerr.precision(2);
+	//std::cerr << std::endl;
 
-	std::cerr	<< "configuration: "
-					<< width << "x" << height
-					<< " (" << spp << " spp)"
+	/*std::cerr	<< "configuration: "
+					<< config.w << "x" << config.h
+					<< " (" << config.spp << " spp)"
 					<< std::endl << std::endl;
 
-	std::cout << "Num. of threads: " << numThreads << std::endl;
+	std::cout << "Num. of threads: " << numThreads << std::endl;*/
 	
 
 	Galois::StatTimer T("Total");
 	T.start();
-	Scene scene(width, height, spp, maxdepth, n, dump);
+	Scene scene(config);
 	scene.raytrace();
-	scene.save(outfile);
+	scene.save();
 	T.stop();
 
-	cerr << endl << endl;
+	std::cerr << std::endl << std::endl;
 }

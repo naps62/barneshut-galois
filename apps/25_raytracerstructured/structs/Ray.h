@@ -21,7 +21,6 @@ struct Ray {
 	 */
 	Ray();
 	Ray(Vec _orig, Vec _dir);
-	Ray(Ray& c);
 
 	Vec operator() (double t) const;
 

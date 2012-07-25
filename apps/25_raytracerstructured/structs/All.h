@@ -1,5 +1,5 @@
-#ifndef _ALL_H
-#define _ALL_H
+#ifndef _STRUCTS_ALL_H
+#define _STRUCTS_ALL_H
 
 #include "Vec.h"
 #include "Box.h"
@@ -9,5 +9,6 @@
 #include "BVHTree.h"
 #include "Pixel.h"
 #include "Image.h"
+#include "Camera.h"
 
-#endif // _ALL_H
+#endif // _STRUCTS_ALL_H
