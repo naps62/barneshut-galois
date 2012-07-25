@@ -26,7 +26,7 @@ struct Scene {
 
 	// objects, including boxes on the borders
 	ObjectList objects;
-	BVHNode* root;
+	BVHTree* root;
 
 	Image img;
 	const uint spp;
@@ -89,7 +89,7 @@ struct Scene {
 	/** initializes scene with some objects */
 	void initScene(uint n) {
 		allocSpheres(n);
-		root = buildBVHNode();
+		root = new BVHTree(objects);
 	}
 
 	void allocSpheres(uint n) {
@@ -136,9 +136,9 @@ struct Scene {
 		}
 	}
 
-	BVHNode* buildBVHNode() {
+	/*BVHNode* buildBVHNode() {
 		vector<Object*> tmp_objects;
-		root = buildBVHNode(NULL, tmp_objects, 0, objects.size() - 1, 0);
+		//root = new BVHTree(tmp_objects, 0, objects.size() - 1, 0);
 
 		for(uint i = 0; i < objects.size(); ++i) {
 			delete objects[i];
@@ -147,70 +147,8 @@ struct Scene {
 		}
 		objects = tmp_objects;
 		return root;
-	}
+	}*/
 
 	// comparator
-	class ObjectComp {
-		public:
-		const ushort axis;
-		ObjectComp(ushort _axis) : axis(_axis) { }
 
-		bool operator() (const Object* o1, const Object* o2) {
-			return o1->pos[axis] < o2->pos[axis];
-		}
-	};
-
-	void sortObjects(const uint start, const uint end, const uint axis) {
-		// insert into an aux vector
-		vector<Object*> sorted;
-		for(uint i = start; i <= end; ++i) {
-			sorted.push_back(objects[i]);
-		}
-
-		// sort it
-		sort(sorted.begin(), sorted.end(), ObjectComp(axis));
-
-		// replace chunch of original vector
-		uint i = start;
-		for(vector<Object*>::iterator it = sorted.begin(); it != sorted.end(); ++it, ++i) {
-			objects[i] = *it;
-		}
-	}
-
-	BVHNode* buildBVHNode(BVHNode* parent, vector<Object*>& new_objects, uint start, uint end, uint axis) {
-		int count = end - start + 1;
-		BVHNode *newNode = new BVHNode(parent);
-		newNode->parent = parent;
-
-		if (count <= 2) {
-			Object* o1 = new Sphere(*static_cast<Sphere*>(objects[start]));
-			new_objects.push_back(o1);
-			
-		
-			newNode->leaf = true;
-			newNode->childs[0] = o1;
-		
-			// update node bounding box
-			newNode->updateTreeBox(o1->box());
-
-			if (count == 2) {
-				Object* o2 = new Sphere(*static_cast<Sphere*>(objects[start + 1]));
-				new_objects.push_back(o2);
-				newNode->updateTreeBox(o2->box());
-				newNode->childs[1] = o2;
-			} else {
-				newNode->childs[1] = NULL;
-			}
-		} else {
-			sortObjects(start, end, axis);
-			uint center = start + (int) (count * 0.5f);
-			axis = (axis == 2) ? 0 : axis+1;
-
-			newNode->leaf = false;
-			newNode->childs[0] = buildBVHNode(newNode, new_objects, start, center-1, axis);
-			newNode->childs[1] = buildBVHNode(newNode, new_objects, center, end, axis);
-		}
-
-		return newNode;
-	}
 };

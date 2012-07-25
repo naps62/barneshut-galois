@@ -6,7 +6,7 @@
 #include "Object.h"
 #include "Sphere.h"
 #include "Ray.h"
-#include "BVHNode.h"
+#include "BVHTree.h"
 #include "Pixel.h"
 #include "Image.h"
 

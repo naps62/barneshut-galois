@@ -17,19 +17,19 @@ struct RayTrace {
 	const Vec& cx;
 	const Vec& cy;
 	const ObjectList& objects;
-	const BVHNode* root;
+	const BVHTree* tree;
 	Image& img;
 	const uint spp;
 	const double contrib;
 	const uint maxdepth;
 	Completeness& completeness;
 
-	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, const BVHNode* _root, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
+	RayTrace(const Ray& _cam, const Vec& _cx, const Vec& _cy, const ObjectList& _objects, const BVHTree* _tree, Image& _img, const uint _spp, const uint _maxdepth, Completeness& _completeness)
 		: cam(_cam),
 		  cx(_cx),
 		  cy(_cy),
 		  objects(_objects),
-		  root(_root),
+		  tree(_tree),
 		  img(_img),
 		  spp(_spp),
 		  contrib(1.0 / spp),
@@ -85,15 +85,15 @@ struct RayTrace {
 		double dist;
 
 		// id of intersected object 
-		int id = 0;
+		Object* obj_ptr = 0;
 
 		// if miss, return black
-		if (!intersect(r, dist, id))
+		if (!tree->intersect(r, dist, obj_ptr))
 			return Vec();
 
 		// the hit object 
-		const Sphere &obj = *static_cast<Sphere*>(objects[id]);
-		Vec f         = obj.color;
+		const Sphere &obj = *static_cast<Sphere*>(obj_ptr);
+		Vec f             = obj.color;
 
 		//Russian Roullete to stop
 		if (++depth > maxdepth) {
@@ -180,43 +180,5 @@ struct RayTrace {
 				}
 			}
 		}
-	}
-
-	inline bool intersect(const Ray& r, double &dist, int &id) {
-		return recurseTree(root, r, dist, id);
-	}
-
-	inline bool recurseTree(const BVHNode* tree, const Ray& ray, double &dist, int &id) {
-		const double inf = 1e20;
-		double d;
-		dist = inf;
-
-		if (! tree->box.isIntersected(ray)) {
-			return false;
-		}
-
-		if (tree->leaf) {
-			for (uint i = 0; i < 2; ++i) {
-				Object* obj = static_cast<Object*>(tree->childs[i]);
-				if (obj && (d = obj->intersect(ray)) && d < dist) {
-					dist = d;
-					id   = obj->id;
-				}
-			}
-		} else {
-			double d;
-			int inner_id;
-			// recurse to left branch
-			if (recurseTree(static_cast<BVHNode*>(tree->childs[0]), ray, d, inner_id) && d < dist) {
-				dist = d;
-				id = inner_id;
-			}
-			// recurse to right branch
-			if (recurseTree(static_cast<BVHNode*>(tree->childs[1]), ray, d, inner_id) && d < dist) {
-				dist = d;
-				id = inner_id;
-			}
-		}
-		return dist < inf;
 	}
 };

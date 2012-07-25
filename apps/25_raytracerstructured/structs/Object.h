@@ -63,4 +63,15 @@ struct Object {
 	friend std::ostream& operator<<(std::ostream& os, const Object& o);
 };
 
+/**
+ * Comparators
+ */
+class ObjectComp_Axis {
+	public:
+	const ushort axis;
+	ObjectComp_Axis(ushort _axis);
+
+	bool operator() (const Object* o1, const Object* o2);
+};
+
 #endif //_OBJECT_H

@@ -34,3 +34,14 @@ std::ostream& operator<<(std::ostream& os, Object& o) {
 	os << o.toString();
 	return os;
 }
+
+/**
+ * Comparators
+ */
+ObjectComp_Axis::ObjectComp_Axis(const ushort _axis)
+:	axis(_axis)
+{ }
+
+bool ObjectComp_Axis::operator() (const Object* o1, const Object* o2) {
+	return o1->pos[axis] < o2->pos[axis];
+}
