@@ -16,6 +16,7 @@ using std::vector;
 #include <Lonestar/BoilerPlate.h>
 #include <Galois/Galois.h>
 #include <Galois/Statistic.h>
+#include <CGAL/spatial_sort.h>
 
 // local includes
 #include "point.h"
@@ -49,12 +50,39 @@ static llvm::cl::opt<unsigned> threads("threads", llvm::cl::desc("Number of thre
 static llvm::cl::opt<unsigned> seed("seed", llvm::cl::desc("Pseudo-random number generator seed. Defaults to current timestamp"), llvm::cl::init(time(NULL)));
 
 #define DIM 3
+
+struct PointSpatialSortingTraits {
+	typedef Point<3>* Point_3;
+
+	typedef struct {
+		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[0] < (*q)[0]; }
+	} Less_x_3;
+
+	typedef struct {
+		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[1] < (*q)[1]; }
+	} Less_y_3;
+
+	typedef struct {
+		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[2] < (*q)[2]; }
+	} Less_z_3;
+
+	Less_x_3 less_x_3_object() const { return Less_x_3(); }
+	Less_y_3 less_y_3_object() const { return Less_y_3(); }
+	Less_z_3 less_z_3_object() const { return Less_z_3(); }
+};
+
+
 int main (int argc, char *argv[]) {
 	LonestarStart(argc, argv, name, desc, url);
 
 	vector<Point<DIM>*> points;
 
 	generateInput(points, npoints, seed);
+
+	//	Sort points
+	// PointSpatialSortingTraits sst;
+	CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
+
 	KdTree<DIM> tree(points);
 
 	// two point correlation
