@@ -37,6 +37,8 @@ static llvm::cl::opt<double> radius("r", llvm::cl::desc("Threshold radius"), llv
 static llvm::cl::opt<unsigned> threads("threads", llvm::cl::desc("Number of threads to use"), llvm::cl::init(1));
 static llvm::cl::opt<unsigned> seed("seed", llvm::cl::desc("Pseudo-random number generator seed. Defaults to current timestamp"), llvm::cl::init(time(NULL)));
 static llvm::cl::opt<unsigned> blocksize("bs", llvm::cl::desc("Block size (number of points to use in a block). Low values mean excessive number of instructions. High values exceed cache capacity."), llvm::cl::init(1));
+static llvm::cl::opt<bool> togglesort("sort", llvm::cl::desc("Toggle spatial sort."), llvm::cl::init(false));
+
 
 #define DIM 3
 
@@ -48,7 +50,8 @@ int main (int argc, char *argv[]) {
 	generateInput(points, npoints, seed);
 
 	//	Sort points
-	CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
+	if (togglesort)
+		CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
 
 	KdTree<DIM> tree(points);
 
@@ -109,19 +112,6 @@ int main (int argc, char *argv[]) {
 		result = (result - points.size()) / 2;
 	}
 	std::cerr << "\t\t" << (double) t.get_usec() * 1e-6 << " seconds" << std::endl;
-	
-	
-	// Galois::StatTimer t;
-	// count.reset(0);
-	// t.start();
-	// unsigned count = 0;
-	// for (unsigned i = 0; i < blocks.size(); ++i)
-		// count += tree.correlated(blocks[i], radius);
-	// Galois::for_each(Point<DIM>::wrap(blocks.begin()), Point<DIM>::wrap(blocks.end()), correlator);
-	// Galois::for_each(Point<DIM>::wrap(points.begin()), Point<DIM>::wrap(points.end()), correlator);
-	// t.stop();
-	// std::cerr << "\t\t" << (double) t.get_usec() * 1e-6 << " seconds" << std::endl;
-	// std::cout << (count - points.size()) / 2 << std::endl;
 	std::cout << result << std::endl;
 
 	//	CLEANUP
