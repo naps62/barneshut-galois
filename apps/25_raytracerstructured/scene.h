@@ -39,11 +39,11 @@ struct Scene {
 	 * Constructor
 	 */
 	Scene(const Config& _config)
-	: //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
-	  //cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
+	:	//TODO: esta merda assim é um nojo, raio de valores mais aleatórios
+		//cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
 		config(_config),
-	  cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm(), _config.w, _config.h),
-	  img(_config.w, _config.h) {
+		cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm(), _config.w, _config.h),
+		img(_config.w, _config.h) {
 
 	  	completeness.val = 0;
 		initScene(config.n);
@@ -57,7 +57,6 @@ struct Scene {
 	 */
 	void raytrace() {
 		Galois::StatTimer T_rayTrace("RayTrace");
-
 		Galois::setActiveThreads(numThreads);
 		
 		//
