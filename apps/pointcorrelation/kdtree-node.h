@@ -103,6 +103,32 @@ struct KdTreeNode {
 		return c;
 	}
 
+	unsigned correlated (const typename Point<K>::Block& b, const double radrsd) const {
+		unsigned count = 0;
+		typename Point<K>::Block next;
+
+		//	count points in block within radius
+		for (unsigned i = 0; i < b.size(); ++i) {
+			if (distanceRaised(*b[i]) > radrsd)
+				continue;
+			next.push_back(b[i]);
+			count += point->distanceRaised(*b[i]) < radrsd;
+		}
+
+		if (next.size() == 0)
+			return count;
+
+		//	go for left nodes
+		if (left)
+			count += left->correlated(next, radrsd);
+
+		//	go for right nodes
+		if (right)
+			count += right->correlated(next, radrsd);
+
+		return count;
+	}
+
 
 
 	friend
