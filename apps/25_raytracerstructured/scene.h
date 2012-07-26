@@ -1,3 +1,6 @@
+#include <vector>
+#include <fstream>
+
 /**
  * TODO fix this stuff
  */
@@ -12,25 +15,22 @@ wrap(Rays::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Ray>());
 }
 
-boost::transform_iterator<Deref<Pixel>, vector<Pixel>::iterator>
-wrap(vector<Pixel>::iterator it) {
+boost::transform_iterator<Deref<Pixel>, std::vector<Pixel>::iterator>
+wrap(std::vector<Pixel>::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Pixel>());
 }
 
 /** Scene representation */
 struct Scene {
 
-	Ray cam;
-	Vec cx;
-	Vec cy;
+	const Config& config;
+	const Camera cam;
 
 	// objects, including boxes on the borders
 	ObjectList objects;
 	BVHTree* root;
 
 	Image img;
-	const uint spp;
-	const uint maxdepth;
 
 	Completeness completeness;
 
@@ -38,22 +38,18 @@ struct Scene {
 	/**
 	 * Constructor
 	 */
-	Scene(uint _w, uint _h, uint _spp, uint _maxdepth, uint n, bool dump=false)
+	Scene(const Config& _config)
 	: //TODO: esta merda assim é um nojo, raio de valores mais aleatórios
 	  //cam(Vec(50, 52, 295.6), Vec(0, -0.042612, -1).norm()),
-	  cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm()),
-	  cx(_w * 0.5 / _h),
-	  cy((cx % cam.dir).norm() * 0.5),
-	  img(_w, _h),
-	  spp(_spp),
-	  maxdepth(_maxdepth) {
+		config(_config),
+	  cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm(), _config.w, _config.h),
+	  img(_config.w, _config.h) {
 
 	  	completeness.val = 0;
-		initScene(n);
+		initScene(config.n);
 
-		if (dump)
-			root->dumpDot(cout);
-		//cout << root->intersect(Ray(Vec(0, 0, -1e2), Vec(0, 0, 1e6))) << endl;
+		if (config.dump)
+			root->dumpDot(std::cout);
 	}
 
 	/**
@@ -68,14 +64,14 @@ struct Scene {
 		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
 		//
 		T_rayTrace.start();
-		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), RayTrace(cam, cx, cy, objects, root, img, spp, maxdepth, completeness));
+		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), RayTrace(cam, root, img, config, completeness));
 		T_rayTrace.stop();
 	}
 
 	/** save image to file */
-	void save(const string &file) {
-		ofstream fs(file);
-		fs << "P3" << endl << img.width << " " << img.height << "\n" << 255 << endl;
+	void save() {
+		std::ofstream fs(config.outfile);
+		fs << "P3" << std::endl << img.width << " " << img.height << "\n" << 255 << std::endl;
 		for (int i=0; i < (img.width * img.height); i++) 
 			fs << toInt(img[i].x) << " " << toInt(img[i].y) << " " << toInt(img[i].z) << " ";
 		fs.close();
@@ -103,10 +99,6 @@ struct Scene {
 		objects.push_back(new Sphere(1e5,  Vec(        0,         0, 1e5+half),  Vec(),  Vec(.25,.55,.25), DIFF)); //Front
 
 		objects.push_back(new Sphere(300,  Vec(0, 300+half-0.5, -0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
-		/*objects.push_back(new Sphere(5,  Vec(0, 0, 0), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
-		objects.push_back(new Sphere(5,  Vec(10, 10, 10), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
-		objects.push_back(new Sphere(5,  Vec(-10, -10, -10), Vec(22,22,22), Vec(1, 1, 1),    DIFF));
-		objects.push_back(new Sphere(5,  Vec(-10, 10, 10), Vec(22,22,22), Vec(1, 1, 1),    DIFF));*/
 
 		if (n == 0)
 			return;
@@ -135,20 +127,4 @@ struct Scene {
 			}
 		}
 	}
-
-	/*BVHNode* buildBVHNode() {
-		vector<Object*> tmp_objects;
-		//root = new BVHTree(tmp_objects, 0, objects.size() - 1, 0);
-
-		for(uint i = 0; i < objects.size(); ++i) {
-			delete objects[i];
-			objects[i] = tmp_objects[i];
-			objects[i]->id = i;
-		}
-		objects = tmp_objects;
-		return root;
-	}*/
-
-	// comparator
-
 };

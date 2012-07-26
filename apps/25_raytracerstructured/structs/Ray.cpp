@@ -19,11 +19,11 @@ Ray::Ray(Vec _orig, Vec _dir)
 }
 
 
-Ray::Ray(Ray& c)
+/*Ray::Ray(Ray& c)
 :	orig(c.orig),
 	dir(c.dir),
 	father(c.father)
-{ }
+{ }*/
 
 
 /**
