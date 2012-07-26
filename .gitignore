@@ -11,5 +11,6 @@ default/*
 inputs/*
 
 build/rls
+build/dbg
 build/*.eps
 include/CGAL
