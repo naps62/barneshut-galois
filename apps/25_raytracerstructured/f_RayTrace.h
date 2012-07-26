@@ -118,7 +118,6 @@ struct RayTrace {
 
 		//Russian Roullete to stop
 		if (++depth > config.maxdepth) {
-			// max refl
 			double max_refl = obj.color.max_coord();
 			if (erand48(Xi) < max_refl)
 				f *= (1 / max_refl);
@@ -136,81 +135,35 @@ struct RayTrace {
 		 *     each case generates a new ray except REFR which can generate 2.
 		 *     Insert each generated ray into new block and recurse on it. Then add the result to each of the previous rays
 		 *     Return value is common to every case, so no problem there */
+		Ray childRay;
+		double weight = 1.0f;
 		switch(obj.refl) {
-			// Ideal DIFFUSE reflection
-			case DIFF: {
-				Ray diffuseRay = computeDiffuseRay(Xi, hit_point, nl);
-				innerResult = f.mult(radiance(diffuseRay, depth, Xi)); 
+			case DIFF: // Ideal DIFFUSE reflection
+				childRay = computeDiffuseRay(Xi, hit_point, nl);
 				break;
-			}
 
-			// Ideal SPECULAR reflection
-			case SPEC: {
-				Ray specularRay = computeSpecularRay(hit_point, norm, ray.dir);
-				innerResult = f.mult(radiance(specularRay, depth, Xi));
+			case SPEC: // Ideal SPECULAR reflection
+				childRay = computeSpecularRay(hit_point, norm, ray.dir);
 				break;
-			}
 
-			// Ideal dielectric REFRACTION
-			case REFR:
-			default: {
+			case REFR: // Ideal dielectric REFRACTION
+				childRay = computeRefractedRay(Xi, ray, norm, nl, hit_point, weight);
+				break;
 
-				// Ray from outside going in?
-				bool into    = norm.dot(nl) > 0;
-				double nc    = 1;
-				double nt    = 1.5;
-				double nnt   = into ? nc / nt : nt / nc;
-				double ddn   = ray.dir.dot(nl);
-				double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
-
-				// Total internal reflection
-				if (cos2t < 0) {
-					Ray reflRay = computeSpecularRay(hit_point, norm, ray.dir);
-					innerResult = f.mult(radiance(reflRay, depth, Xi));
-					break;
-				} else {
-					Vec tdir = (ray.dir * nnt - norm * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)) )).norm();
-					double a = nt - nc;
-					double b = nt + nc;
-					double R0 = a * a / (b * b);
-					double c = 1 - (into ? -ddn : tdir.dot(norm));
-					double Re = R0 + (1 - R0) * c * c * c * c * c;
-					double Tr = 1 - Re; 
-
-					// Russian roulette 
-					Vec refrResult;
-
-					// TODO for now consider only 1 subray (with enough spp's, it works)
-					//if (depth > 2) { // if ray is deep enough, consider only one of the contributions
-						// what about blocks? try to generate always a single ray, and compare results
-
-						// choose which ray to launch
-						double P = 0.25 + 0.5 * Re;
-
-						if (erand48(Xi) < P) {
-							double RP = Re / P;
-							Ray reflRay = computeSpecularRay(hit_point, norm, ray.dir);
-							refrResult = radiance(reflRay, depth, Xi) * RP;
-						}
-						else {
-							double TP = Tr / (1 - P);
-							Ray refrRay = computeReflectedRay(hit_point, tdir);
-							refrResult = radiance(refrRay, depth, Xi) * TP;
-						}
-					//} else { // otherwise, sum both
-					//	refrResult = radiance(reflRay, depth, Xi) * Re + radiance(refrRay, depth, Xi) * Tr;
-					//}
-					innerResult = f.mult(refrResult); 
-					break;
-				}
-			}
+			default:
+				assert(false && "Invalid object reflection type");
+				abort();
 		}
 
-		return obj.emission + innerResult;
+		return obj.emission + f.mult(radiance(childRay, depth, Xi) * weight);
 	}
 
+	/**
+	 * Sub-ray calculation
+	 */
+
 	// creates a diffuse ray
-	Ray computeDiffuseRay(ushort *Xi, Vec& hit_point, Vec& nl) {
+	Ray computeDiffuseRay(ushort *Xi, Vec& hit_point, Vec& nl) const {
 		double r1  = erand48(Xi) * 2 * M_PI;
 		double r2  = erand48(Xi);
 		double r2s = sqrt(r2);
@@ -229,14 +182,57 @@ struct RayTrace {
 	}
 
 	// creates a specular ray
-	Ray computeSpecularRay(const Vec& hit_point, const Vec& norm, const Vec& r_dir) {
+	Ray computeSpecularRay(const Vec& hit_point, const Vec& norm, const Vec& r_dir) const {
 		Ray result(hit_point, r_dir - norm * 2 * norm.dot(r_dir));
 		return result;
 	}
 
 	// creates a reflected ray
-	Ray computeReflectedRay(const Vec& orig, const Vec& dir) {
+	Ray computeReflectedRay(const Vec& orig, const Vec& dir) const {
 		Ray result(orig, dir);
+		return result;
+	}
+
+	// creates a refracted ray
+	Ray computeRefractedRay(ushort *Xi, const Ray& ray, const Vec& norm, const Vec& nl, const Vec& hit_point, double& weight) const {
+		const double nc    = 1;
+		const double nt    = 1.5;
+		const bool   into  = norm.dot(nl) > 0;
+		const double nnt   = into ? nc / nt : nt / nc;
+		const double ddn   = ray.dir.dot(nl);
+		const double cos2t = 1 - nnt * nnt * (1 - ddn * ddn);
+
+		Ray result;
+
+		// Total internal reflection
+		if (cos2t < 0) {
+			result = computeSpecularRay(hit_point, norm, ray.dir);
+			weight = 1.0;
+		} else {
+			Vec tdir = (ray.dir * nnt - norm * ((into ? 1 : -1) * (ddn * nnt + sqrt(cos2t)) )).norm();
+			double a = nt - nc;
+			double b = nt + nc;
+			double R0 = a * a / (b * b);
+			double c = 1 - (into ? -ddn : tdir.dot(norm));
+			double Re = R0 + (1 - R0) * c * c * c * c * c;
+			double Tr = 1 - Re; 
+
+			//if (depth > 2)
+
+			double P = 0.25 + 0.5 * Re;
+			if (erand48(Xi) < P) {
+				result = computeSpecularRay(hit_point, norm, ray.dir);
+				weight = Re / P;
+			}
+			else {
+				result = computeReflectedRay(hit_point, tdir);
+				weight = Tr / (1 - P);
+			}
+
+			//} else { // otherwise, sum both
+			//	refrResult = radiance(reflRay, depth, Xi) * Re + radiance(refrRay, depth, Xi) * Tr;
+			//}
+		}
 		return result;
 	}
 };
