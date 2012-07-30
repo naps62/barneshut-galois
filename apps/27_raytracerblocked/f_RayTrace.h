@@ -57,17 +57,13 @@ struct RayTrace {
 		  *    generate a block of rays and call radiance for each one after size is met
 		  *    probably each block can have a common Xi?
 		  */
-		for(uint sy = 0; sy < 2; ++sy) {
-			for(uint sx = 0; sx < 2; ++sx, rad = Vec()) {
-				for(uint sample = 0; sample < config.spp; ++sample) {
-					// instead of computing radiance
-					// insert ray into a block (use the same Xi for the entire block, and compare results)
-					Ray ray = generateRay(pixel, sx, sy, Xi);
-					rad    += radiance(ray, 0, Xi) * contrib;
-				}
-				pixel += Vec(clamp(rad.x), clamp(rad.y), clamp(rad.z)) * 0.25;
-			}
+		for(uint sample = 0; sample < config.spp; ++sample) {
+			// instead of computing radiance
+			// insert ray into a block (use the same Xi for the entire block, and compare results)
+			Ray ray = generateRay(pixel, Xi);
+			rad    += radiance(ray, 0, Xi) * contrib;
 		}
+		pixel += Vec(clamp(rad.x), clamp(rad.y), clamp(rad.z));
 
 		updateStatus();
 	}
@@ -75,19 +71,16 @@ struct RayTrace {
 
 	private:
 	// generate a new primary ray
-	Ray generateRay(const Pixel& pixel, const uint sx, const uint sy, ushort *Xi) const {
+	Ray generateRay(const Pixel& pixel, ushort *Xi) const {
 		double r1 = 2 * erand48(Xi);
 		double r2 = 2 * erand48(Xi);
 		double dirX = (r1 < 1) ? (sqrt(r1) - 1) : (1 - sqrt(2 - r1));
 		double dirY = (r2 < 1) ? (sqrt(r2) - 1) : (1 - sqrt(2 - r2));
 
 
-		Vec dir = cam.cx * (((sx + 0.5 + dirX)/2 + pixel.w) / img.width  - 0.5) + 
-					 cam.cy * (((sy + 0.5 + dirY)/2 + pixel.h) / img.height - 0.5) +
-					 cam.dir; 
-		//Vec dir = cam.cx * ((dirX + pixel.w) / img.width - 0.5) +
-		//			 cam.cy * ((dirY + pixel.h) / img.height - 0.5) +
-		//			 cam.dir;
+		Vec dir = cam.cx * ((dirX + pixel.w) / img.width - 0.5) +
+					 cam.cy * ((dirY + pixel.h) / img.height - 0.5) +
+					 cam.dir;
 		
 		Ray result(cam.orig, dir.norm());
 		return result;
