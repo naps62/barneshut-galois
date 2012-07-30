@@ -1,0 +1,2 @@
+file(GLOB STRUCTS_CPP "*.cpp")
+add_library(STRUCTSBLOCKED ${STRUCTS_CPP})
