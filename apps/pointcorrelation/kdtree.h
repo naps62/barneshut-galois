@@ -1,6 +1,10 @@
 #ifndef ___KD_TREE_H___
 #define ___KD_TREE_H___
 
+// C++ includes
+#include <vector>
+using std::vector;
+
 // Library includes
 #include <Galois/Accumulator.h>
 
@@ -27,6 +31,23 @@ struct KdTree {
 		}
 	};
 
+	struct BlockedCorrelator {
+		const KdTree<K>& tree;
+		const double radius;
+
+		BlockedCorrelator (const KdTree& _tree, const double _radius)
+		: tree(_tree)
+		, radius(_radius)
+		// , count(_count)
+		{}
+
+		//	Galois functor
+		template<typename Context>
+		void operator() (vector<Point<K>*>* b, Context&) {
+			count.get() += tree.correlated(*b, radius);
+		}
+	};
+
 
 	/////	Instance
 
@@ -39,12 +60,20 @@ struct KdTree {
 			root = NULL;
 	}
 
-	unsigned correlated (const vector<Point<K>*>& points, const double radius) const {
-		unsigned count = 0;
-		for (unsigned i = 0; i < points.size(); ++i)
-			count += correlated(*points[i], radius);
-		return (count - points.size()) / 2;
+	unsigned correlated (const typename Point<K>::Block& b, const double radius) const {
+		const double radrsd = pow(radius, K);
+		if (root)
+			return root->correlated(b, radrsd);
+		else
+			return 0;
 	}
+
+	// unsigned correlated (const vector<Point<K>*>& points, const double radius) const {
+	// 	unsigned count = 0;
+	// 	for (unsigned i = 0; i < points.size(); ++i)
+	// 		count += correlated(*points[i], radius);
+	// 	return (count - points.size()) / 2;
+	// }
 
 	unsigned correlated (const vector<Point<K>*>& points, const double radius, std::ostream& out) const {
 		unsigned count = 0;
@@ -61,9 +90,9 @@ struct KdTree {
 	}
 
 	unsigned correlated(const Point<K>& p, const double radius) const {
-		const double radsq = radius * radius;
+		const double radrsd = pow(radius, K);
 		if (root)
-			return root->correlated(p, radsq);
+			return root->correlated(p, radrsd);
 		else
 			return 0;
 	}

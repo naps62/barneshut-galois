@@ -19,22 +19,10 @@ using std::vector;
 #include <CGAL/spatial_sort.h>
 
 // local includes
+#include "cgal.h"
 #include "point.h"
 #include "kdtree.h"
 #include "utilities.h"
-	
-
-
-
-
-
-// template<unsigned K>
-// unsigned correlated (vector<Point<K>*>& points, const double radius, KdTree<K>& tree) {
-// 	unsigned count = 0;
-// 	for (unsigned i = 0; i < points.size(); ++i)
-// 		count += tree.correlated(*points[i], radius);
-// 	return (count - points.size()) / 2;
-// }
 
 
 
@@ -48,56 +36,83 @@ static llvm::cl::opt<unsigned> npoints("n", llvm::cl::desc("Number of points"), 
 static llvm::cl::opt<double> radius("r", llvm::cl::desc("Threshold radius"), llvm::cl::init(3));
 static llvm::cl::opt<unsigned> threads("threads", llvm::cl::desc("Number of threads to use"), llvm::cl::init(1));
 static llvm::cl::opt<unsigned> seed("seed", llvm::cl::desc("Pseudo-random number generator seed. Defaults to current timestamp"), llvm::cl::init(time(NULL)));
+static llvm::cl::opt<unsigned> blocksize("bs", llvm::cl::desc("Block size (number of points to use in a block). Low values mean excessive number of instructions. High values exceed cache capacity."), llvm::cl::init(1));
+static llvm::cl::opt<bool> togglesort("sort", llvm::cl::desc("Toggle spatial sort."), llvm::cl::init(false));
+
 
 #define DIM 3
-
-struct PointSpatialSortingTraits {
-	typedef Point<3>* Point_3;
-
-	typedef struct {
-		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[0] < (*q)[0]; }
-	} Less_x_3;
-
-	typedef struct {
-		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[1] < (*q)[1]; }
-	} Less_y_3;
-
-	typedef struct {
-		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[2] < (*q)[2]; }
-	} Less_z_3;
-
-	Less_x_3 less_x_3_object() const { return Less_x_3(); }
-	Less_y_3 less_y_3_object() const { return Less_y_3(); }
-	Less_z_3 less_z_3_object() const { return Less_z_3(); }
-};
-
 
 int main (int argc, char *argv[]) {
 	LonestarStart(argc, argv, name, desc, url);
 
-	vector<Point<DIM>*> points;
+	Point<DIM>::Block points;
 
 	generateInput(points, npoints, seed);
 
 	//	Sort points
-	// PointSpatialSortingTraits sst;
-	CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
+	if (togglesort)
+		CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
 
 	KdTree<DIM> tree(points);
 
-	// two point correlation
-	KdTree<DIM>::Correlator correlator(tree, radius);
-	// Galois::setActiveThreads(1);
-	Galois::setActiveThreads(threads);
+	//
+	unsigned result;//<	Final result.
 	Galois::StatTimer t;
-	count.reset(0);
-	t.start();
-	// unsigned count = tree.correlated(points, radius, std::cerr);
-	Galois::for_each(Point<DIM>::wrap(points.begin()), Point<DIM>::wrap(points.end()), correlator);
-	t.stop();
+	const bool g = threads > 0;//	activate Galois
+	const bool b = blocksize > 0;//	activate blocks
+
+	typedef Point<DIM>::Block Block;
+	vector<Block> blocks;
+
+	//	Split into blocks
+	if (b) {
+		blocks = Point<DIM>::blocks(points, blocksize);
+			// // debug
+			// for (unsigned i = 0; i < blocks.size(); ++i) {
+			// 	// std::cerr << blocks[i].size() << std::endl;
+			// 	for (unsigned j = 0; j < blocks[i].size(); ++j)
+			// 		std::cerr << *blocks[i][j] << '\t';
+			// 	std::cerr << std::endl;
+			// }
+			// // return 0;
+	}
+
+	//	Prepare Galois
+	if (g) {
+		Galois::setActiveThreads(threads);
+		count.reset(0);
+	}
+
+	//	two point correlation
+	if (g && b) {
+		KdTree<DIM>::BlockedCorrelator correlator(tree, radius);
+		t.start();
+		Galois::for_each(Point<DIM>::wrap(blocks.begin()), Point<DIM>::wrap(blocks.end()), correlator);
+		t.stop();
+		result = (count.get() - points.size()) / 2;
+	} else if (g) {
+		KdTree<DIM>::Correlator correlator(tree, radius);
+		t.start();
+		Galois::for_each(Point<DIM>::wrap(points.begin()), Point<DIM>::wrap(points.end()), correlator);
+		t.stop();
+		result = (count.get() - points.size()) / 2;
+	} else if (b) {
+		result = 0;
+		t.start();
+		for (unsigned i = 0; i < blocks.size(); ++i)
+			result += tree.correlated(blocks[i], radius);
+		t.stop();
+		result = (result - points.size()) / 2;
+	} else {
+		result = 0;
+		t.start();
+		for (unsigned i = 0; i < points.size(); ++i)
+			result += tree.correlated(*points[i], radius);
+		t.stop();
+		result = (result - points.size()) / 2;
+	}
 	std::cerr << "\t\t" << (double) t.get_usec() * 1e-6 << " seconds" << std::endl;
-	// std::cout << count << std::endl;
-	std::cout << (count.get() - points.size()) / 2 << std::endl;
+	std::cout << result << std::endl;
 
 	//	CLEANUP
 	for (unsigned i = 0; i < points.size(); ++i)
