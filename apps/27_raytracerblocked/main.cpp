@@ -31,6 +31,9 @@ inline int toInt(double x) {
 typedef std::vector<Ray*>    RayList;
 typedef std::vector<Object*> ObjectList;
 
+typedef std::pair<uint, uint> BlockDef
+typedef std::vector<BlockDef> BlockList
+
 #include "Config.h"
 #include "f_ClampImage.h"
 #include "f_RayTrace.h"

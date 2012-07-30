@@ -19,6 +19,11 @@ wrap(std::vector<Pixel>::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Pixel>());
 }
 
+boost::transform_iterator<Deref<BlockDef>, BlockList::iterator>
+wrap(BlockList::iterator it) {
+	return boost::make_transform_iterator(it, Deref<BlockDef>());
+}
+
 /** Scene representation */
 struct Scene {
 
@@ -60,29 +65,48 @@ struct Scene {
 	 * Main function
 	 */
 	void raytrace() {
+		Galois::StatTimer T_primaryRayGen("PrimaryRayGen");
 		Galois::StatTimer T_rayTrace("RayTrace");
 		Galois::setActiveThreads(numThreads);
 
-		//RayList rays(spp*4);
-		
-		//
-		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
-		//
-		T_rayTrace.start();
-		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), RayTrace(cam, tree, img, config, completeness));
-		T_rayTrace.stop();
+		RayList rays(spp*4);
+		BlockList blocks;
+		GaloisRuntime::LL::SimpleLock<true> lock;
 
 		//
-		// Better: iterate each pixel here
-		// each thread computes blocks of pixels
+		// Step 1. Index rays into blocks
 		//
-		/*for(uint sy = 0; sy < 2; ++sy) {
-			for(uint sx = 0; sx < 2; ++sx, rad = Vec()) {
-				for(uint sample = 0; sample < config.spp; ++sample) {
-					rays
-				}
-			}
-		}*/
+		calcBlock(blocks, config.block, rays.size());
+
+		//
+		// Step 2. Allocate rays.
+		//    malloc() is serialized, so no need for for_each here
+		// 
+		for(uint sample = 0; sample < config.spp; ++sample) {
+			rays[sample] = new Ray();	
+		}
+		
+		//
+		// Step 3. Main loop - for each pixel
+		//
+		for(uint p = 0; p < img.size(); ++p) {
+			Pixel& pixel = *(img.pixels[p]);
+
+			//
+			// Step 3.1. Compute primary ray directions
+			//
+			T_primaryRayGen.start();
+			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end(), PrimaryRayGen(img, pixel, rays)));
+			T_primaryRayGen.end();
+
+			//
+			// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
+			//
+			T_rayTrace.start();
+			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), RayTrace(cam, tree, img, pixel, config, lock));
+			T_rayTrace.stop();
+
+			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * ++p.val / (img.size())) << '%';
 	}
 
 	/** save image to file */
@@ -98,6 +122,21 @@ struct Scene {
 	 * Private methods
 	 */
 	private:
+
+	// generates a list of index pairs, to group samples into blocks
+	void calcBlock(BlockList& blocks, uint block_size, uint total) {
+		uint start = 0;
+		uint end = block_size;
+
+		while(start < total) {
+			blocks.push_back(BlockDef(start, end));
+
+			start = end;
+			end += block_size;
+			if (end > total)
+				end = total;
+		}
+	}
 
 	/** initializes scene with some objects */
 	void initScene(uint n) {
