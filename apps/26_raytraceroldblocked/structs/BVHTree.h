@@ -18,7 +18,7 @@ struct BVHTree {
 	// returns true if the Ray intersects an object of the tree, also giving the distance and object as secondary results
 	bool intersect(const Ray& r, double& dist, Object *& obj) const;
 
-	bool intersectBlock(vector<Ray*> rays, std::vector<std::pair<double, Object*>& colisions) const;
+	bool intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const;
 
 	// dumps the entire tree in DOT format
 	void dumpDot(std::ostream& os) const;
