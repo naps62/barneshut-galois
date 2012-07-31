@@ -9,6 +9,7 @@ Config::Config()
 	spp     ("spp",  desc("Samples per pixel"),   init(    4)),
 	maxdepth("d",    desc("Max ray depth"),       init(    5)),
 	n       ("n",    desc("Number of spheres"),   init(    2)),
+	block   ("b",    desc("Block size"),          init(    1)),
 	dump    ("dump", desc("Dump BVH Tree"),       init(false)),
 	outfile ("out",  desc("Output file"),         init(std::string("image.ppm")))
 { }

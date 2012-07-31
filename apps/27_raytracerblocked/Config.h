@@ -12,6 +12,7 @@ struct Config {
 	opt<uint>   spp;
 	opt<uint>   maxdepth;
 	opt<uint>   n;
+	opt<uint>   block;
 	opt<uint>   dump;
 	opt<std::string> outfile;
 

@@ -20,6 +20,9 @@ struct RayTrace {
 	// result image
 	Image& img;
 
+	// current pixel being processed
+	Pixel &pixel;
+
 	// global config reference
 	const Config& config;
 
@@ -29,16 +32,20 @@ struct RayTrace {
 	// keeps track of completeness state
 	Completeness& completeness;
 
+	// lock on the pixel value
+	GaloisRuntime::LL::SimpleLock<true>& lock
+
 	/**
 	 * Constructor
 	 */
-	RayTrace(const Camera& _cam, const BVHTree* _tree, Image& _img, const Config& _config, Completeness& _comp)
+	RayTrace(const Camera& _cam, const BVHTree* _tree, Image& _img, Pixel& p, const Config& _config, GaloisRuntime::LL::SimpleLock<true>& _lock)
 	:	cam(_cam),
 		tree(_tree),
 		img(_img),
+		pixel(_pixel),
 		config(_config),
 		contrib(1.0 / (double) config.spp),
-		completeness(_comp)
+		lock(_lock)
 	{ }
 
 	/**
@@ -46,9 +53,9 @@ struct RayTrace {
 	 */
 	// receive a block of pixels instead
 	template<typename Context>
-	void operator()(Pixel* p, Context&) {
-		Pixel& pixel = *p;
-		ushort seed = static_cast<ushort>(pixel.h * pixel.h * pixel.w);
+	void operator()(BlockDef* _block, Context&) {
+		BlockDef& block = *_block;
+		ushort seed = static_cast<ushort>(pixel.h * pixel.w * block.first);
 		ushort Xi[3] = {0, 0, seed};
 
 		Vec rad;
@@ -57,15 +64,21 @@ struct RayTrace {
 		  *    generate a block of rays and call radiance for each one after size is met
 		  *    probably each block can have a common Xi?
 		  */
-		for(uint sample = 0; sample < config.spp; ++sample) {
+		for(uint sample = block.first; sample < block.second; ++sample) {
 			// instead of computing radiance
 			// insert ray into a block (use the same Xi for the entire block, and compare results)
 			Ray ray = generateRay(pixel, Xi);
 			rad    += radiance(ray, 0, Xi) * contrib;
 		}
-		pixel += Vec(clamp(rad.x), clamp(rad.y), clamp(rad.z));
 
-		updateStatus();
+
+		
+
+		completeness.lock.lock();
+		pixel += Vec(clamp(rad.x), clamp(rad.y), clamp(rad.z));
+		//std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * ++completeness.val / (img.size())) << '%';
+		completeness.lock.unlock();
+		//updateStatus();
 	}
 
 
