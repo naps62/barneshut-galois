@@ -15,12 +15,14 @@ struct PrimaryRayGen {
 	// Optimize runtime for no conflict case
 	typedef int tt_does_not_need_aborts;
 
+	const Camera& cam;
 	const Image& img;
 	const Pixel& pixel;
 	RayList& rays;
 
-	PrimaryRayGen(Image& _img, Pixel& _pixel, RayList& _rays)
-		:	img(_img),
+	PrimaryRayGen(const Camera& _cam, const Image& _img, const Pixel& _pixel, RayList& _rays)
+		:	cam(_cam),
+			img(_img),
 			pixel(_pixel),
 			rays(_rays)
 		{ }
@@ -30,21 +32,20 @@ struct PrimaryRayGen {
 	 */
 	template<typename Context>
 	void operator()(BlockDef* _block, Context&) {
-		Pixel& pixel = *pix;
 		BlockDef& block = *_block;
 
-		ushort seed = static_cast<ushort>(pixel.h * pixel.w * block.start);
+		ushort seed = static_cast<ushort>(pixel.h * pixel.w * block.first);
 		ushort Xi[3] = {0, 0, seed};
 
 		for(uint s = block.first; s < block.second; ++s) {
-			Ray& ray = rays[s];
-			ray = generateRay(pixel, Xi);
+			Ray& ray = *(rays[s]);
+			generateRay(ray, pixel, Xi);
 		}	
 	}
 
 	private:
 
-	Ray generateRay(const Pixel& pixel, ushort *Xi) const {
+	void generateRay(Ray& ray, const Pixel& pixel, ushort *Xi) const {
 		double r1 = 2 * erand48(Xi);
 		double r2 = 2 * erand48(Xi);
 		double dirX = (r1 < 1) ? (sqrt(r1) - 1) : (1 - sqrt(2 - r1));
@@ -54,8 +55,8 @@ struct PrimaryRayGen {
 					 cam.cy * ((dirY + pixel.h) / img.height - 0.5) +
 					 cam.dir;
 		
-		Ray result(cam.orig, dir.norm());
-		return result;
+		ray.orig = cam.orig;
+		ray.dir  = dir.norm();
 	}
 };
 

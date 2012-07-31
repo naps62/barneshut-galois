@@ -1,6 +1,9 @@
+#include <algorithm>
+#include <limits>
+#include <map>
 #include <string>
 #include <sstream>
-#include <algorithm>
+#include <utility>
 
 #include "BVHNode.h"
 #include "Sphere.h"
@@ -47,7 +50,7 @@ void BVHNode::updateTreeBox(const Box& b) {
 }
 
 
-bool BVHNode::recurseTree(const Ray& ray, double& dist, Object *& obj) {
+bool BVHNode::recurseTree(const Ray& ray, double& dist, Object *& obj) const {
 	const double inf = 1e20;
 	double d;
 	dist = inf;
@@ -68,7 +71,7 @@ bool BVHNode::recurseTree(const Ray& ray, double& dist, Object *& obj) {
 		}
 	} else {
 		double d;
-		int inner_id;
+		// int inner_id;
 		// recurse to left branch
 		if (this->childs[0].node->recurseTree(ray, d, current_obj) && d < dist) {
 			dist = d;
@@ -83,6 +86,52 @@ bool BVHNode::recurseTree(const Ray& ray, double& dist, Object *& obj) {
 	return dist < inf;
 }
 
+bool BVHNode::intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const {
+	std::vector<Ray*> subrays;
+
+	//	filter out all the rays which do not intersect the big box
+	for (unsigned i = 0; i < rays.size(); ++i)
+		if (box.isIntersected(*rays[i]))
+			subrays.push_back(rays[i]);
+
+	//	if no ray is alive, fail now
+	if (rays.size() == 0)
+		return false;
+
+	bool result = false;
+	if (leaf) {
+		for (unsigned i = 0; i < subrays.size(); ++i) {
+			double distance = std::numeric_limits<double>::max();
+			Object* object = NULL;
+			for (unsigned j = 0; j < 2; ++j) {
+				Object* o = childs[i].leaf;
+				double d;
+				if (o && (d = o->intersect(*subrays[i])) && d < distance) {
+					distance = d;
+					object = o;
+				}
+			}
+			if (distance < std::numeric_limits<double>::max()) {
+				colisions[rays[i]] = std::make_pair(distance, object);
+				result = true;
+			}
+		}
+	} else {
+		for (unsigned i = 0; i < 2; ++i) {
+			std::map<Ray*,std::pair<double,Object*> > subcolisions;
+			result = result || childs[i].node->intersect(rays, subcolisions);
+			std::map<Ray*,std::pair<double,Object*> >::iterator it;
+			for (it = subcolisions.begin(); it != subcolisions.end(); ++it)
+				if (colisions.count((*it).first) > 0) {
+					double d1 = colisions[(*it).first].first;
+					double d2 = (*it).second.first;
+					if (d2 < d1)
+						colisions[(*it).first] = (*it).second;
+				}
+		}
+	}
+	return result;
+}
 
 /**
  * Output

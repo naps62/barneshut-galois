@@ -5,6 +5,7 @@
 #include <cmath>
 #include <stdlib.h>
 #include <vector>
+#include <utility>
 
 #include "Galois/Galois.h"
 #include "Galois/Statistic.h"
@@ -31,12 +32,14 @@ inline int toInt(double x) {
 typedef std::vector<Ray*>    RayList;
 typedef std::vector<Object*> ObjectList;
 
-typedef std::pair<uint, uint> BlockDef
-typedef std::vector<BlockDef> BlockList
+typedef std::pair<uint, uint> BlockDef;
+typedef std::vector<BlockDef > BlockList;
 
 #include "Config.h"
 #include "f_ClampImage.h"
-#include "f_RayTrace.h"
+#include "f_SpatialSortBlocks.h"
+#include "f_PrimaryRayGen.h"
+#include "f_CastRays.h"
 #include "scene.h"
 
 Config config;

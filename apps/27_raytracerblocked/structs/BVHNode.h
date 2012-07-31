@@ -2,6 +2,7 @@
 #define _BVHNODE_H
 
 #include <vector>
+#include <utility>
 
 #include "BVHNode.h"
 #include "Box.h"
@@ -49,7 +50,9 @@ struct BVHNode {
 	// updates bounding box on this node, and recurses up the tree
 	void updateTreeBox(const Box& box);
 
-	bool recurseTree(const Ray& r, double& dist, Object *& obj);
+	bool recurseTree(const Ray& r, double& dist, Object *& obj) const;
+
+	bool intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const;
 
 	/**
 	 * Output

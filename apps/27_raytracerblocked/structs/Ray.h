@@ -12,17 +12,19 @@ struct Ray {
 	// vector origin and direction
 	Vec orig;
 	Vec dir;
-
-	// father id (-1 if no father)
-	int father;
+	Vec val;
+	Vec weight;
+	bool valid;
 
 	/**
 	 * Constructors
 	 */
 	Ray();
-	Ray(Vec _orig, Vec _dir);
+	Ray(Vec _orig, Vec _dir, Vec _val = Vec(), Vec weight = Vec(), bool _valid = true);
 
 	Vec operator() (double t) const;
+
+	void weightedAdd(const Vec& f);
 
 	/**
 	 * Output

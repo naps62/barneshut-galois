@@ -29,16 +29,13 @@ struct RayTrace {
 	// contribution of each sample to the pixel
 	const double contrib;
 
-	// keeps track of completeness state
-	Completeness& completeness;
-
 	// lock on the pixel value
-	GaloisRuntime::LL::SimpleLock<true>& lock
+	GaloisRuntime::LL::SimpleLock<true>& lock;
 
 	/**
 	 * Constructor
 	 */
-	RayTrace(const Camera& _cam, const BVHTree* _tree, Image& _img, Pixel& p, const Config& _config, GaloisRuntime::LL::SimpleLock<true>& _lock)
+	RayTrace(const Camera& _cam, const BVHTree* _tree, Image& _img, Pixel& _pixel, const Config& _config, GaloisRuntime::LL::SimpleLock<true>& _lock)
 	:	cam(_cam),
 		tree(_tree),
 		img(_img),

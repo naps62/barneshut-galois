@@ -1,5 +1,11 @@
+#ifndef _SCENE_H
+#define _SCENE_H
+
 #include <vector>
 #include <fstream>
+
+#include <CGAL/spatial_sort.h>
+#include "sorting_traits.h"
 
 /**
  * TODO fix this stuff
@@ -41,8 +47,6 @@ struct Scene {
 
 	Image img;
 
-	Completeness completeness;
-
 
 	/**
 	 * Constructor
@@ -54,8 +58,7 @@ struct Scene {
 		cam(Vec(0, 0, -260), Vec(0, -0.0, 1).norm(), _config.w, _config.h),
 		img(_config.w, _config.h) {
 
-	  	completeness.val = 0;
-		initScene(config.n);
+		this->initScene(config.n);
 
 		if (config.dump)
 			tree->dumpDot(std::cout);
@@ -69,44 +72,69 @@ struct Scene {
 		Galois::StatTimer T_rayTrace("RayTrace");
 		Galois::setActiveThreads(numThreads);
 
-		RayList rays(spp*4);
+		RayList rays(config.spp*4);
 		BlockList blocks;
 		GaloisRuntime::LL::SimpleLock<true> lock;
+		SpatialRayOriginSortingTraits sort_origin_traits;
 
 		//
-		// Step 1. Index rays into blocks
+		// 1. Index rays into blocks
 		//
 		calcBlock(blocks, config.block, rays.size());
 
 		//
-		// Step 2. Allocate rays.
+		// 2. Allocate rays.
 		//    malloc() is serialized, so no need for for_each here
 		// 
-		for(uint sample = 0; sample < config.spp; ++sample) {
+		for(uint sample = 0; sample < rays.size(); ++sample) {
 			rays[sample] = new Ray();	
 		}
 		
 		//
-		// Step 3. Main loop - for each pixel
+		// 3. Main loop - for each pixel
 		//
 		for(uint p = 0; p < img.size(); ++p) {
-			Pixel& pixel = *(img.pixels[p]);
+			Pixel& pixel = img.pixels[p];
+			uint rays_left = rays.size();
 
 			//
-			// Step 3.1. Compute primary ray directions
+			// 3.1. Compute primary ray directions
 			//
 			T_primaryRayGen.start();
-			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end(), PrimaryRayGen(img, pixel, rays)));
-			T_primaryRayGen.end();
+			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), PrimaryRayGen(cam, img, pixel, rays));
+			T_primaryRayGen.stop();
 
 			//
-			// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
+			// 3.2. While there are rays to compute
 			//
 			T_rayTrace.start();
-			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), RayTrace(cam, tree, img, pixel, config, lock));
+			while(rays_left) {
+
+				//
+				// 3.2.1. Globally sort all rays
+				//
+				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
+
+				//
+				// 2.3.2. Locally sort each block of rays
+				//
+				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), SpatialSortBlocks(rays));
+
+				//
+				// 2.3.3. 
+				//
+				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, rays_left, lock));
+
+				// TODO add each ray contribution to some vector
+			}
 			T_rayTrace.stop();
 
-			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * ++p.val / (img.size())) << '%';
+			//
+			// TODO reduce the vector to get final pixel value
+			//
+
+			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * ++p / (img.size())) << '%';
+		}
 	}
 
 	/** save image to file */
@@ -184,3 +212,5 @@ struct Scene {
 		}
 	}
 };
+
+#endif // _SCENE_H

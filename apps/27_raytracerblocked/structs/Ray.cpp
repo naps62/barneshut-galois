@@ -5,25 +5,20 @@
  */
 Ray::Ray()
 :	orig(),
-	dir()
-{
-	father = -1;
-}
+	dir(),
+	val(),
+	weight(),
+	valid(true)
+{ }
 
 
-Ray::Ray(Vec _orig, Vec _dir)
+Ray::Ray(Vec _orig, Vec _dir, Vec _val, Vec _weight, bool _valid)
 :	orig(_orig),
-	dir(_dir)
-{
-	father = -1;
-}
-
-
-/*Ray::Ray(Ray& c)
-:	orig(c.orig),
-	dir(c.dir),
-	father(c.father)
-{ }*/
+	dir(_dir),
+	val(_val),
+	weight(_weight),
+	valid(_valid)
+{ }
 
 
 /**
@@ -33,10 +28,13 @@ Vec Ray::operator() (double t) const {
 	return orig + dir * t;
 }
 
+void Ray::weightedAdd(const Vec& f) {
+	val += weight.mult(f);
+}
 
 /**
  * Output
  */
 std::ostream& operator<<(std::ostream& os, const Ray& r) {
-	return os << "Ray:(orig: " << r.orig << ", dir: " << r.dir << ")";
+	return os << "Ray:(orig: " << r.orig << ", dir: " << r.dir << ", weight: " << r.weight << ")";
 }
