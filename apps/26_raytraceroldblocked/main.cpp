@@ -9,6 +9,7 @@
 #include "Galois/Galois.h"
 #include "Galois/Statistic.h"
 #include "Lonestar/BoilerPlate.h"
+#include "papi.h"
 
 
 /** clamps a value between 0 and 1 */
@@ -54,14 +55,48 @@ int main(int argc, char *argv[]) {
 					<< std::endl << std::endl;
 
 	std::cout << "Num. of threads: " << numThreads << std::endl;*/
-	
 
 	Galois::StatTimer T("Total");
 	T.start();
 	Scene scene(config);
+
+	//	PAPI preparation
+	int set;
+	long long int * values;
+	if (!config.papicountername.empty()) {
+		assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
+		set = PAPI_NULL;
+		assert(PAPI_create_eventset(&set) == PAPI_OK);
+		int event;
+		char *name = strdup(config.papicountername.c_str());
+		assert(name != NULL);
+		assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
+		free(name);
+		assert(PAPI_add_event(set, event) == PAPI_OK);
+
+		values = new long long int[PAPI_num_events(set)];
+		assert(PAPI_start(set) == PAPI_OK);
+
+		Galois::setActiveThreads(1);
+	}
+	
 	scene.raytrace();
+
+	//	PAPI cleanup
+	if (!config.papicountername.empty()) {
+		assert(PAPI_stop(set, values) == PAPI_OK);
+		assert(PAPI_cleanup_eventset(set) == PAPI_OK);
+		assert(PAPI_destroy_eventset(&set) == PAPI_OK);
+		PAPI_shutdown();
+	}
+
 	scene.save();
 	T.stop();
 
 	std::cerr << std::endl << std::endl;
+	//	output
+	if (values) {
+		std::cout << config.papicountername << ": " << values[0] << std::endl;
+		delete[] values;
+	}
 }
