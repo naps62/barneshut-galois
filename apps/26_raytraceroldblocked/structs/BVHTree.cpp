@@ -23,6 +23,10 @@ bool BVHTree::intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<
 	return root->intersect(rays, colisions);
 }
 
+bool BVHTree::intersect (Ray** const rays, const unsigned nrays, std::map<Ray*,std::pair<double, Object*> >& colisions) const {
+	std::vector<Ray*> v(rays, rays + nrays);
+	return intersect(v, colisions);
+}
 
 /**
  * Tree creation

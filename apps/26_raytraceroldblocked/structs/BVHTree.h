@@ -20,6 +20,8 @@ struct BVHTree {
 
 	bool intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const;
 
+	bool intersect (Ray** const rays, const unsigned nrays, std::map<Ray*,std::pair<double, Object*> >& colisions) const;
+
 	// dumps the entire tree in DOT format
 	void dumpDot(std::ostream& os) const;
 
