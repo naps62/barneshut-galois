@@ -2,6 +2,7 @@
 #define _BVHNODE_H
 
 #include <vector>
+#include <utility>
 
 #include "BVHNode.h"
 #include "Box.h"
@@ -51,7 +52,7 @@ struct BVHNode {
 
 	bool recurseTree(const Ray& r, double& dist, Object *& obj) const;
 
-	bool intersectBlock(vector<Ray*> rays, std::vector<std::pair<double, Object*>& colisions) const;
+	bool intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const;
 
 	/**
 	 * Output
