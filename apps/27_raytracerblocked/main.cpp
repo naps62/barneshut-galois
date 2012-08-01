@@ -36,7 +36,9 @@ typedef std::pair<uint, uint> BlockDef;
 typedef std::vector<BlockDef > BlockList;
 
 #include "Config.h"
-#include "f_ClampImage.h"
+#include "Rng.h"
+//#include "f_ClampImage.h"
+#include "f_InitRNG.h"
 #include "f_SpatialSortBlocks.h"
 #include "f_PrimaryRayGen.h"
 #include "f_CastRays.h"

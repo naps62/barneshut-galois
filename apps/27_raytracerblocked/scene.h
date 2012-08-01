@@ -30,6 +30,11 @@ wrap(BlockList::iterator it) {
 	return boost::make_transform_iterator(it, Deref<BlockDef>());
 }
 
+boost::transform_iterator<Deref<RNG>, std::vector<RNG>::iterator>
+wrap(std::vector<RNG>::iterator it) {
+	return boost::make_transform_iterator(it, Deref<RNG>());
+}
+
 /** Scene representation */
 struct Scene {
 
@@ -72,10 +77,13 @@ struct Scene {
 		Galois::StatTimer T_rayTrace("RayTrace");
 		Galois::setActiveThreads(numThreads);
 
-		RayList rays(config.spp*4);
+		RayList rays(config.spp);
 		BlockList blocks;
 		GaloisRuntime::LL::SimpleLock<true> lock;
 		SpatialRayOriginSortingTraits sort_origin_traits;
+		vector<RNG> rngs(numThreads);
+
+		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());
 
 		//
 		// 1. Index rays into blocks
@@ -108,6 +116,7 @@ struct Scene {
 			// 3.2. While there are rays to compute
 			//
 			T_rayTrace.start();
+			uint depth = 0;
 			while(rays_left) {
 
 				//
@@ -123,7 +132,9 @@ struct Scene {
 				//
 				// 2.3.3. 
 				//
-				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, rays_left, lock));
+				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, rays_left, depth, rngs, lock));
+				if (depth > 3)rays_left--;
+				depth++;
 
 				// TODO add each ray contribution to some vector
 			}
