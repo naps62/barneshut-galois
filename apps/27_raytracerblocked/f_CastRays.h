@@ -98,7 +98,7 @@ struct CastRays {
 		// distance to intersection 
 		double dist;
 
-		// id of intersected object 
+		// id of intersected object
 		Object* obj_ptr;
 
 		// if miss, return black
