@@ -10,5 +10,6 @@ Config::Config()
 	maxdepth("d",    desc("Max ray depth"),       init(    5)),
 	n       ("n",    desc("Number of spheres"),   init(    2)),
 	dump    ("dump", desc("Dump BVH Tree"),       init(false)),
-	outfile ("out",  desc("Output file"),         init(std::string("image.ppm")))
+	outfile ("out",  desc("Output file"),         init(std::string("image.ppm"))),
+	papicountername	("papi", desc("Name of the PAPI counter to measure."),	init(std::string("")))
 { }

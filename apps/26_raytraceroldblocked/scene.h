@@ -75,7 +75,7 @@ struct Scene {
 	void save() {
 		std::ofstream fs(config.outfile);
 		fs << "P3" << std::endl << img.width << " " << img.height << "\n" << 255 << std::endl;
-		for (int i=0; i < (img.width * img.height); i++) 
+		for (unsigned i=0; i < (img.width * img.height); i++) 
 			fs << toInt(img[i].x) << " " << toInt(img[i].y) << " " << toInt(img[i].z) << " ";
 		fs.close();
 	}

@@ -14,6 +14,7 @@ struct Config {
 	opt<uint>   n;
 	opt<uint>   dump;
 	opt<std::string> outfile;
+	opt<std::string> papicountername;
 
 	Config();
 };
