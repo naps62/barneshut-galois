@@ -57,6 +57,9 @@ struct PrimaryRayGen {
 		
 		ray.orig = cam.orig;
 		ray.dir  = dir.norm();
+		ray.val  = Vec();
+		ray.valid = true;
+		ray.weight = Vec(1.0, 1.0, 1.0);
 	}
 };
 

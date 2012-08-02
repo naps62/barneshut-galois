@@ -20,7 +20,7 @@ struct Ray {
 	 * Constructors
 	 */
 	Ray();
-	Ray(Vec _orig, Vec _dir, Vec _val = Vec(), Vec weight = Vec(), bool _valid = true);
+	Ray(Vec _orig, Vec _dir, Vec _val = Vec(), Vec weight = Vec(1.0, 1.0, 1.0), bool _valid = true);
 
 	Vec operator() (double t) const;
 

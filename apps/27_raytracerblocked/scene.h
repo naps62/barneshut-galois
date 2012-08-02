@@ -3,13 +3,14 @@
 
 #include <vector>
 #include <fstream>
-
+#include <Galois/Accumulator.h>
 #include <CGAL/spatial_sort.h>
 #include "sorting_traits.h"
 
 /**
  * TODO fix this stuff
  */
+
 
 template<typename T>
 struct Deref : public std::unary_function<T, T*> {
@@ -79,73 +80,62 @@ struct Scene {
 
 		RayList rays(config.spp);
 		BlockList blocks;
-		GaloisRuntime::LL::SimpleLock<true> lock;
 		SpatialRayOriginSortingTraits sort_origin_traits;
 		vector<RNG> rngs(numThreads);
 
 		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());
 
-		//
 		// 1. Index rays into blocks
-		//
 		calcBlock(blocks, config.block, rays.size());
 
-		//
 		// 2. Allocate rays.
 		//    malloc() is serialized, so no need for for_each here
-		// 
 		for(uint sample = 0; sample < rays.size(); ++sample) {
 			rays[sample] = new Ray();	
 		}
 		
-		//
 		// 3. Main loop - for each pixel
-		//
 		for(uint p = 0; p < img.size(); ++p) {
 			Pixel& pixel = img.pixels[p];
-			uint rays_left = rays.size();
+			Galois::GAccumulator<uint> accum;
+			accum.reset(0);
 
-			//
 			// 3.1. Compute primary ray directions
-			//
 			T_primaryRayGen.start();
 			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), PrimaryRayGen(cam, img, pixel, rays));
 			T_primaryRayGen.stop();
 
-			//
 			// 3.2. While there are rays to compute
-			//
 			T_rayTrace.start();
 			uint depth = 0;
-			while(rays_left) {
+			while(accum.get() != rays.size()) {
 
-				//
 				// 3.2.1. Globally sort all rays
-				//
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
 
-				//
 				// 2.3.2. Locally sort each block of rays
-				//
 				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), SpatialSortBlocks(rays));
 
-				//
-				// 2.3.3. 
-				//
-				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, rays_left, depth, rngs, lock));
-				if (depth > 3)rays_left--;
+				// 2.3.3. Cast'em all
+				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, accum, depth, rngs));
+				
 				depth++;
-
-				// TODO add each ray contribution to some vector
 			}
 			T_rayTrace.stop();
 
-			//
-			// TODO reduce the vector to get final pixel value
-			//
 
-			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * ++p / (img.size())) << '%';
+			// TODO reduce the vector to get final pixel value
+			Galois::GAccumulator<Vec> gather;
+			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), ReduceRays(rays, gather));
+
+			pixel.setColor(gather.get());
+			//Galois::GAccumulator<double> pixel_x;
+			//Galois::GAccumulator<double> pixel_x;
+
+			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * p / (img.size())) << '%';
 		}
+
+		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
 	}
 
 	/** save image to file */

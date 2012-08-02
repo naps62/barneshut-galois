@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Completeness.h"
+#include <Galois/Accumulator.h>
 
 #include "Rng.h"
 
@@ -32,7 +33,7 @@ struct CastRays {
 	const Config& config;
 
 	// how many rays left to process
-	uint& rays_left;
+	Galois::GAccumulator<uint>& accum;
 
 	// whats the depth of the current rays?
 	const uint depth;
@@ -43,9 +44,6 @@ struct CastRays {
 	// contribution of each sample to the pixel
 	const double contrib;
 
-	// lock on the pixel value
-	GaloisRuntime::LL::SimpleLock<true>& lock;
-
 	/**
 	 * Constructor
 	 */
@@ -55,21 +53,19 @@ struct CastRays {
 				Pixel& _pixel,
 				RayList& _rays,
 				const Config& _config,
-				uint& _rays_left,
+				Galois::GAccumulator<uint>& _accum,
 				const uint _depth,
-				std::vector<RNG>& _rngs,
-				GaloisRuntime::LL::SimpleLock<true>& _lock)
+				std::vector<RNG>& _rngs)
 	:	cam(_cam),
 		tree(_tree),
 		img(_img),
 		pixel(_pixel),
 		rays(_rays),
 		config(_config),
-		rays_left(_rays_left),
+		accum(_accum),
 		depth(_depth),
 		rngs(_rngs),
-		contrib(1.0 / (double) config.spp),
-		lock(_lock)
+		contrib(1.0 / (double) config.spp)
 	{ }
 
 	/**
@@ -116,6 +112,7 @@ struct CastRays {
 
 				Vec f = obj.color;
 
+				std::cout << depth << " " << obj.id << " " << ray << " col: " << ray.orig + ray.dir*dist << std::endl;
 				ray.weightedAdd(obj.emission);
 
 				if (depth > config.maxdepth && ray.valid) {
@@ -157,11 +154,7 @@ struct CastRays {
 				}
 			}
 
-			//lock.lock();
-			// std::cout << "entered lock" << std::endl;
-			//rays_left -= rays_disabled;
-			//lock.unlock();
-			// std::cout << "exited lock" << std::endl;
+			accum.get() += rays_disabled;
 		}
 	}
 
