@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iostream>
 #include <map>
 #include <string>
 #include <sstream>
@@ -19,12 +20,14 @@ bool BVHTree::intersect(const Ray& r, double& dist, Object *& obj) const {
 	return root->recurseTree(r, dist, obj);
 }
 
-bool BVHTree::intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const {
+bool BVHTree::intersect (const RayList& rays, ColisionMap& colisions) const {
 	return root->intersect(rays, colisions);
+	// for (unsigned i = 0; i < rays.size(); ++i)
+	// 	std::cout << *rays[i] << std::endl;
 }
 
-bool BVHTree::intersect (Ray** const rays, const unsigned nrays, std::map<Ray*,std::pair<double, Object*> >& colisions) const {
-	std::vector<Ray*> v(rays, rays + nrays);
+bool BVHTree::intersect (Ray** const rays, const unsigned nrays, ColisionMap& colisions) const {
+	RayList v(rays, rays + nrays);
 	return intersect(v, colisions);
 }
 
