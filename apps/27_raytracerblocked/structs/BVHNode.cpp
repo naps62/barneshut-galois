@@ -112,7 +112,7 @@ bool BVHNode::intersect (const RayList& rays, ColisionMap& colisions) const {
 				Object * o = childs[c].leaf;
 				double d;
 				//	if there is an object, it is intersected by the ray and the distance is less than the minimum found so far, accept this new distance/object solution
-				if (o && (d = o->intersect(*subrays[r])) < distance) {
+				if (o && (d = o->intersect(*subrays[r])) && d < distance) {
 					distance = d;
 					object = o;
 				}

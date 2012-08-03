@@ -41,9 +41,6 @@ struct CastRays {
 	// random number generators
 	std::vector<RNG>& rngs;
 
-	// contribution of each sample to the pixel
-	const double contrib;
-
 	/**
 	 * Constructor
 	 */
@@ -64,8 +61,7 @@ struct CastRays {
 		config(_config),
 		accum(_accum),
 		depth(_depth),
-		rngs(_rngs),
-		contrib(1.0 / (double) config.spp)
+		rngs(_rngs)
 	{ }
 
 	/**
