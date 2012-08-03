@@ -20,11 +20,15 @@ struct PrimaryRayGen {
 	const Pixel& pixel;
 	RayList& rays;
 
-	PrimaryRayGen(const Camera& _cam, const Image& _img, const Pixel& _pixel, RayList& _rays)
+	// random number generators
+	std::vector<RNG>& rngs;
+
+	PrimaryRayGen(const Camera& _cam, const Image& _img, const Pixel& _pixel, RayList& _rays, std::vector<RNG>& _rngs)
 		:	cam(_cam),
 			img(_img),
 			pixel(_pixel),
-			rays(_rays)
+			rays(_rays),
+			rngs(_rngs)
 		{ }
 
 	/**
@@ -34,20 +38,17 @@ struct PrimaryRayGen {
 	void operator()(BlockDef* _block, Context&) {
 		BlockDef& block = *_block;
 
-		ushort seed = static_cast<ushort>(pixel.h * pixel.w * block.first);
-		ushort Xi[3] = {0, 0, seed};
-
 		for(uint s = block.first; s < block.second; ++s) {
 			Ray& ray = *(rays[s]);
-			generateRay(ray, pixel, Xi);
+			generateRay(ray, pixel, rngs[GaloisRuntime::LL::getTID()]);
 		}	
 	}
 
 	private:
 
-	void generateRay(Ray& ray, const Pixel& pixel, ushort *Xi) const {
-		double r1 = 2 * erand48(Xi);
-		double r2 = 2 * erand48(Xi);
+	void generateRay(Ray& ray, const Pixel& pixel, RNG& rng) const {
+		double r1 = 2 * rng();
+		double r2 = 2 * rng();
 		double dirX = (r1 < 1) ? (sqrt(r1) - 1) : (1 - sqrt(2 - r1));
 		double dirY = (r2 < 1) ? (sqrt(r2) - 1) : (1 - sqrt(2 - r2));
 
@@ -57,7 +58,7 @@ struct PrimaryRayGen {
 		
 		ray.orig = cam.orig;
 		ray.dir  = dir.norm();
-		ray.val  = Vec();
+		ray.val  = Vec(0.0, 0.0, 0.0);
 		ray.valid = true;
 		ray.weight = Vec(1.0, 1.0, 1.0);
 	}

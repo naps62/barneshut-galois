@@ -102,7 +102,7 @@ struct Scene {
 
 			// 3.1. Compute primary ray directions
 			T_primaryRayGen.start();
-			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), PrimaryRayGen(cam, img, pixel, rays));
+			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), PrimaryRayGen(cam, img, pixel, rays, rngs));
 			T_primaryRayGen.stop();
 
 			// 3.2. While there are rays to compute

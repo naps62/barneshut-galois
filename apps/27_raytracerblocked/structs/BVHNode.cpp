@@ -148,7 +148,7 @@ bool BVHNode::intersect (const RayList& rays, ColisionMap& colisions) const {
 			for (unsigned j = 0; j < 2; ++j) {
 				Object* o = childs[i].leaf;
 				double d;
-				if (o && (d = o->intersect(*subrays[i])) < distance) {
+				if (o && (d = o->intersect(*subrays[i])) && d < distance) {
 					distance = d;
 					object = o;
 				}
