@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+using std::string;
 #include <vector>
 using std::vector;
 
@@ -17,6 +18,7 @@ using std::vector;
 #include <Galois/Galois.h>
 #include <Galois/Statistic.h>
 #include <CGAL/spatial_sort.h>
+#include <papi.h>
 
 // local includes
 #include "cgal.h"
@@ -34,11 +36,11 @@ const char* url = "pointcorrelation";
 
 static llvm::cl::opt<unsigned> npoints("n", llvm::cl::desc("Number of points"), llvm::cl::init(32));
 static llvm::cl::opt<double> radius("r", llvm::cl::desc("Threshold radius"), llvm::cl::init(3));
-static llvm::cl::opt<unsigned> threads("threads", llvm::cl::desc("Number of threads to use"), llvm::cl::init(1));
 static llvm::cl::opt<unsigned> seed("seed", llvm::cl::desc("Pseudo-random number generator seed. Defaults to current timestamp"), llvm::cl::init(time(NULL)));
 static llvm::cl::opt<unsigned> blocksize("bs", llvm::cl::desc("Block size (number of points to use in a block). Low values mean excessive number of instructions. High values exceed cache capacity."), llvm::cl::init(1));
 static llvm::cl::opt<bool> togglesort("sort", llvm::cl::desc("Toggle spatial sort."), llvm::cl::init(false));
-
+static llvm::cl::opt<bool> g("g", llvm::cl::desc("Toggle Galois."), llvm::cl::init(false));
+static llvm::cl::opt<string> papicn("papi", llvm::cl::desc("PAPI counter name."), llvm::cl::init(string("")));
 
 #define DIM 3
 
@@ -58,30 +60,34 @@ int main (int argc, char *argv[]) {
 	//
 	unsigned result;//<	Final result.
 	Galois::StatTimer t;
-	const bool g = threads > 0;//	activate Galois
+	if (numThreads > 1)
+		g = true;
+	// const bool g = numThreads > 0;//	activate Galois
 	const bool b = blocksize > 0;//	activate blocks
 
 	typedef Point<DIM>::Block Block;
 	vector<Block> blocks;
 
-	//	Split into blocks
-	if (b) {
-		blocks = Point<DIM>::blocks(points, blocksize);
-			// // debug
-			// for (unsigned i = 0; i < blocks.size(); ++i) {
-			// 	// std::cerr << blocks[i].size() << std::endl;
-			// 	for (unsigned j = 0; j < blocks[i].size(); ++j)
-			// 		std::cerr << *blocks[i][j] << '\t';
-			// 	std::cerr << std::endl;
-			// }
-			// // return 0;
+	//	Prepare PAPI
+	int papiEventSet = PAPI_NULL;
+	if (!papicn.empty()) {
+		assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
+		assert(PAPI_thread_init(getTID) == PAPI_OK);
+		assert(PAPI_create_eventset(&papiEventSet) == PAPI_OK);
+		int event;
+		char * name = strdup(papicn.c_str());
+		assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
+		free(name);
+		assert(PAPI_add_event(papiEventSet, event) == PAPI_OK);
 	}
 
+	//	Split into blocks
+	if (b)
+		blocks = Point<DIM>::blocks(points, blocksize);
+
 	//	Prepare Galois
-	if (g) {
-		Galois::setActiveThreads(threads);
+	if (g)
 		count.reset(0);
-	}
 
 	//	two point correlation
 	if (g && b) {
@@ -113,6 +119,13 @@ int main (int argc, char *argv[]) {
 	}
 	std::cerr << "\t\t" << (double) t.get_usec() * 1e-6 << " seconds" << std::endl;
 	std::cout << result << std::endl;
+
+	//	Cleanup PAPI
+	if (papiEventSet != PAPI_NULL) {
+		PAPI_cleanup_eventset(papiEventSet);
+		PAPI_destroy_eventset(&papiEventSet);
+		PAPI_shutdown();
+	}
 
 	//	CLEANUP
 	for (unsigned i = 0; i < points.size(); ++i)
