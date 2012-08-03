@@ -13,7 +13,7 @@ struct InitRNG {
 	 */
 	template<typename Context>
 	void operator()(RNG* rng, Context&) {
-		rng->init(GaloisRuntime::LL::getTID() * time(NULL));
+		rng->init(GaloisRuntime::LL::getTID()/* * time(NULL)*/);
 	}
 };
 

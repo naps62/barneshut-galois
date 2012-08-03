@@ -36,5 +36,5 @@ void Ray::weightedAdd(const Vec& f) {
  * Output
  */
 std::ostream& operator<<(std::ostream& os, const Ray& r) {
-	return os << "Ray:(orig: " << r.orig << ", dir: " << r.dir << ", weight: " << r.weight << ")";
+	return os << "Ray:(orig: " << r.orig << ", dir: " << r.dir << ")";
 }
