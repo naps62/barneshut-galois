@@ -102,7 +102,7 @@ bool BVHNode::intersect (const RayList& rays, ColisionMap& colisions) const {
 		return false;
 
 	//	go through every child
-	bool result = false;
+	// bool result = false;
 	if (leaf)
 		//	test each ray, and find the closest child
 		for (unsigned r = 0; r < subrays.size(); ++r) {
@@ -118,14 +118,14 @@ bool BVHNode::intersect (const RayList& rays, ColisionMap& colisions) const {
 				}
 			}
 			//	if a child was intersected, add it to the colisions and return successfully
-			if ((result = (distance < std::numeric_limits<double>::max())))
+			if (distance < std::numeric_limits<double>::max())
 				colisions[subrays[r]] = std::make_pair(distance, object);
 		}
 	else
 		for (unsigned c = 0; c < 2; ++c) {
 			ColisionMap subcolisions;
 			
-			if ((result = result || childs[c].node->intersect(subrays, subcolisions))) {
+			if (childs[c].node->intersect(subrays, subcolisions)) {
 				ColisionMap::iterator it;
 				//	merge colisions found in subnodes
 				for (it = subcolisions.begin(); it != subcolisions.end(); ++it) {
@@ -137,7 +137,7 @@ bool BVHNode::intersect (const RayList& rays, ColisionMap& colisions) const {
 				}
 			}
 		}
-	return result;
+	return !colisions.empty();
 
 	/*bool result = false;
 	if (leaf) {
