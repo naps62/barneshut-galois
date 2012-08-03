@@ -2,6 +2,7 @@
 #define _RAY_H 
 
 #include <ostream>
+#include <vector>
 
 #include "Vec.h"
 
@@ -31,5 +32,7 @@ struct Ray {
 	 */
 	friend std::ostream& operator<<(std::ostream& os, const Ray& r);
 };
+
+typedef std::vector<Ray*> RayList;
 
 #endif // _RAY_H
