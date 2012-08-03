@@ -11,9 +11,12 @@ struct ReduceRays {
 	RayList& rays;
 	Galois::GAccumulator<Vec>& accum;
 
+	const double contrib;
+
 	ReduceRays(RayList& _rays, Galois::GAccumulator<Vec>& _accum)
 		:	rays(_rays),
-			accum(_accum)
+			accum(_accum),
+			contrib(1 / (double) rays.size())
 	{ }
 
 	/**
@@ -24,7 +27,7 @@ struct ReduceRays {
 		BlockDef& block = *_block;
 
 		for(uint s = block.first; s < block.second; ++s) {
-			accum.get() += rays[s]->val;
+			accum.get() += rays[s]->val * contrib;
 		}
 	}
 };

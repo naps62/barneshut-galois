@@ -27,7 +27,19 @@ bool BVHTree::intersect (const RayList& rays, ColisionMap& colisions) const {
 }
 
 bool BVHTree::intersect (Ray** const rays, const unsigned nrays, ColisionMap& colisions) const {
-	RayList v(rays, rays + nrays);
+	/*double dist;
+	Object * obj;
+	bool res = this->intersect(*rays[0], dist, obj);
+
+	if (dist > 0)
+		colisions[rays[0]] = (std::make_pair(dist, obj));
+
+	return res;*/
+	//RayList v(rays, rays + nrays);
+	RayList v;
+	for(uint r = 0; r < nrays; ++r)
+		if (rays[r]->valid)
+			v.push_back(rays[r]);
 	return intersect(v, colisions);
 }
 

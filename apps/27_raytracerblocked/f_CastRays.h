@@ -41,9 +41,6 @@ struct CastRays {
 	// random number generators
 	std::vector<RNG>& rngs;
 
-	// contribution of each sample to the pixel
-	const double contrib;
-
 	/**
 	 * Constructor
 	 */
@@ -64,8 +61,7 @@ struct CastRays {
 		config(_config),
 		accum(_accum),
 		depth(_depth),
-		rngs(_rngs),
-		contrib(1.0 / (double) config.spp)
+		rngs(_rngs)
 	{ }
 
 	/**
@@ -97,6 +93,7 @@ struct CastRays {
 
 		// if miss, return black
 		if (!tree->intersect(blockStart, blockSize, colisions)) {
+			// std::cout << "ahah fuck you and your cousin" << std::endl;
 			for(uint i = block.first; i < block.second; ++i) {
 				if (rays[i]->valid) {
 					rays[i]->valid = false;
@@ -104,6 +101,7 @@ struct CastRays {
 				}
 			}
 		} else {
+			// if (colisions.empty()) std::cout << "whatever, fuck them anyway" << std::endl;
 			for(ColisionList::iterator it = colisions.begin(); it != colisions.end(); ++it) {
 				Ray& ray          = *(it->first);
 				double dist       = it->second.first;
