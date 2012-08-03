@@ -112,7 +112,7 @@ struct CastRays {
 
 				Vec f = obj.color;
 
-				std::cout << depth << " " << obj.id << " " << ray << " col: " << ray.orig + ray.dir*dist << std::endl;
+				std::cout << depth << " " << obj.id << " " << ray << " dist: " << dist << std::endl;
 				ray.weightedAdd(obj.emission);
 
 				if (depth > config.maxdepth && ray.valid) {
@@ -153,9 +153,8 @@ struct CastRays {
 					ray.weight *= f;
 				}
 			}
-
-			accum.get() += rays_disabled;
 		}
+		accum.get() += rays_disabled;
 	}
 
 	/**
