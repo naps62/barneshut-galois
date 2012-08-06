@@ -1,0 +1,74 @@
+\documentclass[abstract=on,9pt,twocolumn]{scrartcl}
+
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+
+% %\usepackage{graphics}%	images other than eps
+
+% \usepackage[paper=a4paper,top=2cm,left=1.5cm,right=1.5cm,bottom=2cm,foot=1cm]{geometry}
+
+%	relative font sizes
+\usepackage{relsize}
+
+% \usepackage[retainorgcmds]{IEEEtrantools}%	IEEEeqnarray
+% \setlength{\IEEEnormaljot}{4\IEEEnormaljot}
+
+% \usepackage{graphicx}
+% \usepackage{epstopdf}
+% \usepackage{indentfirst}
+\usepackage{hyperref}
+\usepackage{cleveref}
+% %\usepackage[noabbrev]{cleveref}
+% \usepackage{listings}
+% \usepackage{color}
+
+%	TODO assignments and notes
+\usepackage{todonotes}
+\newcommand{\todoline}[2][inline]{\todo[#1]{#2}}
+
+\newcommand{\todopfac}[1]{\todoline[color=red!40]{#1}}
+\newcommand{\todonaps}[1]{\todoline[color=green!40]{#1}}
+
+
+% %%%%%%%%%%%
+% %  Hacks  %
+% %%%%%%%%%%%
+
+% %	Paragraph (title) with linebreak
+% \newcommand{\paragraphh}[1]{\paragraph{#1\hfill}\hfill
+
+% }
+
+%	Add "Appendix" to the appendices titles, but not to the references
+\usepackage{ifthen}
+\newcommand*{\appendixmore}{%
+  \renewcommand*{\othersectionlevelsformat}[1]{%
+    \ifthenelse{\equal{##1}{section}}{\appendixname~}{}%
+    \csname the##1\endcsname\autodot\enskip}
+  \renewcommand*{\sectionmarkformat}{%
+    \appendixname~\thesection\autodot\enskip}
+}
+
+
+\input{report/000_title}
+
+\begin{document}
+\maketitle
+
+\input{report/001_abstract}		% Abstract
+\input{report/100_intro}		% Introduction
+\input{report/200_optim}		% Optimizations
+\input{report/300_cases}		% Study Cases
+\input{report/400_results}		% Comparison results
+\input{report/900_conclusion}	% Conclusion
+
+\bibliographystyle{IEEE}
+\bibliography{report}
+
+\appendix
+
+\input{report/991_env}		% Environmental Setup
+\input{report/992_method}	% Methodology
+
+\end{document}
