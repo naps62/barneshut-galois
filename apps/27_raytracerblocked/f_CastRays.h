@@ -1,6 +1,9 @@
 #include <iostream>
 
 #include "Completeness.h"
+#include <Galois/Accumulator.h>
+
+#include "Rng.h"
 
 /**
  * Functor
@@ -30,13 +33,13 @@ struct CastRays {
 	const Config& config;
 
 	// how many rays left to process
-	uint rays_left;
+	Galois::GAccumulator<uint>& accum;
 
-	// contribution of each sample to the pixel
-	const double contrib;
+	// whats the depth of the current rays?
+	const uint depth;
 
-	// lock on the pixel value
-	GaloisRuntime::LL::SimpleLock<true>& lock;
+	// random number generators
+	std::vector<RNG>& rngs;
 
 	/**
 	 * Constructor
@@ -47,17 +50,18 @@ struct CastRays {
 				Pixel& _pixel,
 				RayList& _rays,
 				const Config& _config,
-				uint _rays_left,
-				GaloisRuntime::LL::SimpleLock<true>& _lock)
+				Galois::GAccumulator<uint>& _accum,
+				const uint _depth,
+				std::vector<RNG>& _rngs)
 	:	cam(_cam),
 		tree(_tree),
 		img(_img),
 		pixel(_pixel),
 		rays(_rays),
 		config(_config),
-		rays_left(_rays_left),
-		contrib(1.0 / (double) config.spp),
-		lock(_lock)
+		accum(_accum),
+		depth(_depth),
+		rngs(_rngs)
 	{ }
 
 	/**
@@ -68,15 +72,7 @@ struct CastRays {
 	void operator()(BlockDef* _block, Context&) {
 		BlockDef& block = *_block;
 
-
-		ushort seed = static_cast<ushort>(pixel.h * pixel.w * block.first);
-		ushort Xi[3] = {0, 0, seed};
-		
-		/** To blockalize:
-		  *    generate a block of rays and call radiance for each one after size is met
-		  *    probably each block can have a common Xi?
-		  */
-		radiance(block, 0, Xi) * contrib;
+		radiance(block, rngs[GaloisRuntime::LL::getTID()]);
 	}
 
 
@@ -86,7 +82,7 @@ struct CastRays {
 	/** To blockalize:
 	 *     receive a block of rays rather than a single one */
 	// receive a block of rays
-	Vec radiance(const BlockDef& block/*const Ray &ray*/, uint depth, unsigned short *Xi){
+	void radiance(const BlockDef& block/*const Ray &ray*/, RNG& rng) {
 		Ray** blockStart = &(rays[block.first]);
 		uint blockSize = block.second - block.first;
 
@@ -95,68 +91,68 @@ struct CastRays {
 
 		uint rays_disabled = 0;
 
-		// distance to intersection 
-		double dist;
-
-		// id of intersected object 
-		Object* obj_ptr;
-
 		// if miss, return black
-		if (!tree->intersect(blockStart, blockSize, colisions))
-			return Vec();
-
-		for(ColisionList::iterator it = colisions.begin(); it != colisions.end(); ++it) {
-			Ray& ray          = *(it->first);
-			double dist       = it->second.first;
-			const Sphere& obj = *static_cast<Sphere*>(it->second.second);
-
-
-			Vec f = obj.color;
-
-			ray.weightedAdd(obj.emission);
-
-			if (++depth > config.maxdepth && ray.valid) {
-				double max_refl = obj.color.max_coord();
-				if (erand48(Xi) < max_refl)
-					f *= (1 / max_refl);
-				else {
-					ray.valid = false;
+		if (!tree->intersect(blockStart, blockSize, colisions)) {
+			// std::cout << "ahah fuck you and your cousin" << std::endl;
+			for(uint i = block.first; i < block.second; ++i) {
+				if (rays[i]->valid) {
+					rays[i]->valid = false;
 					rays_disabled++;
 				}
 			}
+		} else {
+			// if (colisions.empty()) std::cout << "whatever, fuck them anyway" << std::endl;
+			for(ColisionList::iterator it = colisions.begin(); it != colisions.end(); ++it) {
+				Ray& ray          = *(it->first);
+				double dist       = it->second.first;
+				const Sphere& obj = *static_cast<Sphere*>(it->second.second);
 
-			if (ray.valid == false)
-				continue;
 
-			Vec innerResult;
-			Vec hit_point = ray.orig + ray.dir * dist;
-			Vec norm      = (hit_point - obj.pos).norm();
-			Vec nl        = norm.dot(ray.dir) < 0 ? norm : (norm * -1);
+				Vec f = obj.color;
 
-			switch(obj.refl) {
-				case DIFF: // Ideal DIFFUSE reflection
-					computeDiffuseRay(ray, Xi, hit_point, nl);
-					break;
+				//std::cout << depth << " " << obj.id << " " << ray << " dist: " << dist << std::endl;
+				ray.weightedAdd(obj.emission);
 
-				case SPEC: // Ideal SPECULAR reflection
-					computeSpecularRay(ray, hit_point, norm, ray.dir);
-					break;
+				if (depth > config.maxdepth && ray.valid) {
+					double max_refl = obj.color.max_coord();
+					if (rng() < max_refl)
+						f *= (1 / max_refl);
+					else {
+						ray.valid = false;
+						rays_disabled++;
+					}
+					//std::cout << rng() << std::endl;
+				}
 
-				case REFR: // Ideal dielectric REFRACTION
-					computeRefractedRay(ray, Xi, norm, nl, hit_point);
-					break;
+				if (ray.valid) {
+					Vec innerResult;
+					Vec hit_point = ray.orig + ray.dir * dist;
+					Vec norm      = (hit_point - obj.pos).norm();
+					Vec nl        = norm.dot(ray.dir) < 0 ? norm : (norm * -1);
 
-				default:
-					assert(false && "Invalid object reflection type");
-					abort();
+					switch(obj.refl) {
+						case DIFF: // Ideal DIFFUSE reflection
+							computeDiffuseRay(ray, rng, hit_point, nl);
+							break;
+
+						case SPEC: // Ideal SPECULAR reflection
+							computeSpecularRay(ray, hit_point, norm, ray.dir);
+							break;
+
+						case REFR: // Ideal dielectric REFRACTION
+							computeRefractedRay(ray, rng, norm, nl, hit_point);
+							break;
+
+						default:
+							assert(false && "Invalid object reflection type");
+							abort();
+					}
+
+					ray.weight *= f;
+				}
 			}
-
-			ray.weight *= f;
 		}
-
-		lock.lock();
-		rays_left -= rays_disabled;
-		lock.unlock();
+		accum.get() += rays_disabled;
 	}
 
 	/**
@@ -164,9 +160,9 @@ struct CastRays {
 	 */
 
 	// creates a diffuse ray
-	void computeDiffuseRay(Ray& ray, ushort *Xi, Vec& hit_point, Vec& nl) const {
-		double r1  = erand48(Xi) * 2 * M_PI;
-		double r2  = erand48(Xi);
+	void computeDiffuseRay(Ray& ray, RNG& rng, Vec& hit_point, Vec& nl) const {
+		double r1  = rng() * 2 * M_PI;
+		double r2  = rng();
 		double r2s = sqrt(r2);
 
 		Vec w   = nl;
@@ -191,7 +187,7 @@ struct CastRays {
 	}
 
 	// creates a refracted ray
-	void computeRefractedRay(Ray& ray, ushort *Xi, const Vec& norm, const Vec& nl, const Vec& hit_point) const {
+	void computeRefractedRay(Ray& ray, RNG& rng, const Vec& norm, const Vec& nl, const Vec& hit_point) const {
 		const double nc    = 1;
 		const double nt    = 1.5;
 		const bool   into  = norm.dot(nl) > 0;
@@ -215,7 +211,7 @@ struct CastRays {
 			//if (depth > 2)
 
 			double P = 0.25 + 0.5 * Re;
-			if (erand48(Xi) < P) {
+			if (rng() < P) {
 				computeSpecularRay(ray, hit_point, norm, ray.dir);
 				weight = Re / P;
 			}

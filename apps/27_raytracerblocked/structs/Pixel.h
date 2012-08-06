@@ -17,6 +17,8 @@ struct Pixel : public Vec {
 			double _y=0,
 			double _z=0);
 
+	void setColor(const Vec& c);
+
 	friend std::ostream& operator<<(std::ostream& os, const Pixel& p);
 };
 

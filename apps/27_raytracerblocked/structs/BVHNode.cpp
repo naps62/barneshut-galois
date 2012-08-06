@@ -86,8 +86,11 @@ bool BVHNode::recurseTree(const Ray& ray, double& dist, Object *& obj) const {
 	return dist < inf;
 }
 
-bool BVHNode::intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<double, Object*> >& colisions) const {
-	std::vector<Ray*> subrays;
+bool BVHNode::intersect (const RayList& rays, ColisionMap& colisions) const {
+	RayList subrays;
+
+	//	clear colisions map
+	colisions.clear();
 
 	//	filter out all the rays which do not intersect the big box
 	for (unsigned i = 0; i < rays.size(); ++i)
@@ -95,11 +98,50 @@ bool BVHNode::intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<
 			subrays.push_back(rays[i]);
 
 	//	if no ray is alive, fail now
-	if (rays.size() == 0)
+	if (subrays.size() == 0)
 		return false;
 
-	bool result = false;
+	//	go through every child
+	// bool result = false;
+	if (leaf)
+		//	test each ray, and find the closest child
+		for (unsigned r = 0; r < subrays.size(); ++r) {
+			double distance = std::numeric_limits<double>::max();
+			Object * object = NULL;
+			for (unsigned c = 0; c < 2; ++c) {
+				Object * o = childs[c].leaf;
+				double d;
+				//	if there is an object, it is intersected by the ray and the distance is less than the minimum found so far, accept this new distance/object solution
+				if (o && (d = o->intersect(*subrays[r])) && d < distance) {
+					distance = d;
+					object = o;
+				}
+			}
+			//	if a child was intersected, add it to the colisions and return successfully
+			if (distance < std::numeric_limits<double>::max())
+				colisions[subrays[r]] = std::make_pair(distance, object);
+		}
+	else
+		for (unsigned c = 0; c < 2; ++c) {
+			ColisionMap subcolisions;
+			
+			if (childs[c].node->intersect(subrays, subcolisions)) {
+				ColisionMap::iterator it;
+				//	merge colisions found in subnodes
+				for (it = subcolisions.begin(); it != subcolisions.end(); ++it) {
+					Ray* r = it->first;
+					//	if this ray has not intersected anything before, add it
+					//	if this ray already intersected something already, choose the closest object
+					if (colisions.count(r) == 0 || it->second.first < colisions[r].first)
+						colisions[r] = it->second;
+				}
+			}
+		}
+	return !colisions.empty();
+
+	/*bool result = false;
 	if (leaf) {
+		//	if this node is a leaf, test each ray in each child
 		for (unsigned i = 0; i < subrays.size(); ++i) {
 			double distance = std::numeric_limits<double>::max();
 			Object* object = NULL;
@@ -112,25 +154,29 @@ bool BVHNode::intersect (const std::vector<Ray*>& rays, std::map<Ray*,std::pair<
 				}
 			}
 			if (distance < std::numeric_limits<double>::max()) {
-				colisions[rays[i]] = std::make_pair(distance, object);
+				colisions[subrays[i]] = std::make_pair(distance, object);
 				result = true;
 			}
 		}
 	} else {
 		for (unsigned i = 0; i < 2; ++i) {
 			std::map<Ray*,std::pair<double,Object*> > subcolisions;
-			result = result || childs[i].node->intersect(rays, subcolisions);
+			//	recursively find subsequent ray colisions
+			result = result || childs[i].node->intersect(subrays, subcolisions);
+
+			//	merge colisions
 			std::map<Ray*,std::pair<double,Object*> >::iterator it;
 			for (it = subcolisions.begin(); it != subcolisions.end(); ++it)
-				if (colisions.count((*it).first) > 0) {
-					double d1 = colisions[(*it).first].first;
-					double d2 = (*it).second.first;
+				if (colisions.count(it->first) > 0) {
+					double d1 = colisions[it->first].first;
+					double d2 = it->second.first;
 					if (d2 < d1)
-						colisions[(*it).first] = (*it).second;
-				}
+						colisions[it->first] = it->second;
+				} else
+					colisions[it->first] = it->second;
 		}
 	}
-	return result;
+	return result;*/
 }
 
 /**

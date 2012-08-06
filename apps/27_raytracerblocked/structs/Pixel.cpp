@@ -10,6 +10,12 @@ Pixel::Pixel(	uint _w,
 	h(_h)
 { }
 
+void Pixel::setColor(const Vec& c) {
+	this->x = c.x;
+	this->y = c.y;
+	this->z = c.z;
+}
+
 std::ostream& operator<<(std::ostream& os, const Pixel& p) {
 	os << "(" << p.w << ", " << p.h << ")"
 		<< " (r:" << p.x << ", g:" << p.y << ", b:" << p.z << ")";
