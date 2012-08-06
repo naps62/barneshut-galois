@@ -11,5 +11,6 @@ add_subdirectory(24_raytracerbvh)
 add_subdirectory(25_raytracerstructured)
 #add_subdirectory(26_raytraceroldblocked)
 add_subdirectory(27_raytracerblocked)
+add_subdirectory(28_raytracernotblocked)
 
 add_subdirectory(pointcorrelation)
