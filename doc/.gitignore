@@ -1,0 +1,12 @@
+# Output files
+*.pdf
+# BibTeX generated files
+*.bbl
+*.blg
+# LaTeX generated files
+*.aux
+*.log
+*.out
+# latexmk generated files
+*.fdb_latexmk
+*.fls
