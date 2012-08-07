@@ -5,7 +5,7 @@ if (host STREQUAL "naps62-mint")
 app(raytracerblocked main.cpp Config.cpp EXTLIBS /usr/local/lib/libCGAL.so)
 else()
 include_directories(/workspace/pcosta/local/include)
-app(raytracerblocked main.cpp Config.cpp EXTLIBS "/workspace/pcosta/local/lib/libCGAL.so")
+app(raytracerblocked main.cpp Config.cpp EXTLIBS "/workspace/pcosta/local/lib/libCGAL.so" /workspace/pcosta/local/lib/libpapi.a)
 endif()
 
 target_link_libraries(raytracerblocked STRUCTSBLOCKED)

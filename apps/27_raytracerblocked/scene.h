@@ -7,10 +7,9 @@
 #include <CGAL/spatial_sort.h>
 #include "sorting_traits.h"
 
-/**
- * TODO fix this stuff
- */
-
+inline unsigned long getThreadId() {
+	return GaloisRuntime::LL::getTID();
+}
 
 template<typename T>
 struct Deref : public std::unary_function<T, T*> {
@@ -89,7 +88,7 @@ struct Scene {
 		if (!config.papicounter.empty()) {
 			std::cout << "Using PAPI" << std::endl;
 			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
-			assert(PAPI_thread_init(GaloisRuntime::LL::getTID) == PAPI_OK);
+			assert(PAPI_thread_init(getThreadId) == PAPI_OK);
 		}
 
 		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());
@@ -147,7 +146,7 @@ struct Scene {
 		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
 
 		if (!config.papicounter.empty()) {
-			std::cout << "PAPI Value: " << counter_accum.get() << std::endl;
+			std::cout << "\n\nPAPI Value: " << counter_accum.get() << std::endl;
 		}
 	}
 
