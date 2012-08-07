@@ -84,26 +84,50 @@ struct KdTree {
 		std::string papiEventName;
 		Galois::GAccumulator<long long int> * const papiValueTotal;
 
-		BlockedCorrelator (const KdTree& _tree, const double _radius, Galois::GAccumulator<unsigned long> * const _tTraversalTotal, const std::string& _papiEventName = "", Gal )
+		BlockedCorrelator (const KdTree& _tree, const double _radius, Galois::GAccumulator<unsigned long> * const _tTraversalTotal, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL)
 		: tree(_tree)
 		, radius(_radius)
 		, tTraversalTotal(_tTraversalTotal)
-		, papiEventSet(_papiEventSet)
-		, papiValuesTotal(_papiValuesTotal)
-		// , count(_count)
-		{
-			if (papiEventSet != PAPI_NULL)
-				papiValues = new long long int[PAPI_num_events(papiEventSet)];
-		}
+		, papiEventName(_papiEventName)
+		, papiValueTotal(_papiValueTotal)
+		{}
 
 		//	Galois functor
 		template<typename Context>
 		void operator() (vector<Point<K>*>* b, Context&) {
 			Galois::StatTimer tTraversal;
-			tTraversal.start();
-			count.get() += tree.correlated(*b, radius);
-			tTraversal.stop();
-			tTraversalTotal->get() += tTraversal.get_usec();
+			if (!papiEventName.empty()) {
+				int eventSet = PAPI_NULL;
+				assert(PAPI_create_eventset(&eventSet) == PAPI_OK);
+
+				int event;
+				char * name = strdup(papiEventName.c_str());
+				assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
+				free(name);
+
+				assert(PAPI_add_event(eventSet, event) == PAPI_OK);
+
+				long long int value;
+				assert(PAPI_start(eventSet) == PAPI_OK);
+
+				tTraversal.start();
+				count.get() += tree.correlated(*b, radius);
+				tTraversal.stop();
+				tTraversalTotal->get() += tTraversal.get_usec();
+
+				assert(PAPI_stop(eventSet, &value) == PAPI_OK);
+
+				//	gather values
+				papiValueTotal->get() += value;
+
+				assert(PAPI_cleanup_eventset(eventSet) == PAPI_OK);
+				assert(PAPI_destroy_eventset(&eventSet) == PAPI_OK);
+			} else {
+				tTraversal.start();
+				count.get() += tree.correlated(*b, radius);
+				tTraversal.stop();
+				tTraversalTotal->get() += tTraversal.get_usec();
+			}
 		}
 	};
 
