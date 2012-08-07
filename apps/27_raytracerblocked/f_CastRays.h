@@ -113,7 +113,7 @@ struct CastRays {
 		}
 		bool intersected = tree->intersect(blockStart, blockSize, colisions);
 		if (!config.papicounter.empty()) {
-			assert(PAPI_stop(eventSet, counter_values) == PAPI_OK);
+			assert(PAPI_stop(papi_set, counter_values) == PAPI_OK);
 			counter_accum.get() += counter_values[0];
 		}
 
