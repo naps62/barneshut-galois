@@ -85,10 +85,10 @@ struct Scene {
 		//	PAPI preparation
 		Galois::GAccumulator<long long> counter_accum;
 		counter_accum.reset(0);
-		if (!config.papi) {
+		if (config.papi) {
 			std::cout << "Using PAPI" << std::endl;
 			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
-			assert(PAPI_thread_init(getThreadId) == PAPI_OK);
+			//assert(PAPI_thread_init(getThreadId) == PAPI_OK);
 		}
 
 		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());
@@ -118,7 +118,6 @@ struct Scene {
 
 				// 3.2.1. Globally sort all rays
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
-
 				// 2.3.2. Locally sort each block of rays
 				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), SpatialSortBlocks(rays));
 
@@ -145,7 +144,7 @@ struct Scene {
 
 		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
 
-		if (!config.papi) {
+		if (config.papi) {
 			std::cout << "\n\nPAPI Value: " << counter_accum.get() << std::endl;
 			PAPI_shutdown();
 		}

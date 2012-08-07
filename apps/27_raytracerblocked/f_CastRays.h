@@ -100,15 +100,16 @@ struct CastRays {
 		long long int value;
 		if (config.papi) {
 			assert(PAPI_create_eventset(&papi_set) == PAPI_OK);
-			assert(PAPI_add_event(papi_set, PAPI_L2_DCM) == PAPI_OK);
+			assert(PAPI_add_event(papi_set, PAPI_TOT_INS) == PAPI_OK);
 			assert(PAPI_start(papi_set) == PAPI_OK);
 		}
 		bool intersected = tree->intersect(blockStart, blockSize, colisions);
 		if (config.papi) {
 			assert(PAPI_stop(papi_set, &value) == PAPI_OK);
+			std::cout << value << std::endl;
+			counter_accum.get() += value;
 			assert(PAPI_cleanup_eventset(papi_set) == PAPI_OK);
 			assert(PAPI_destroy_eventset(&papi_set) == PAPI_OK);
-			counter_accum.get() += value;
 		}
 
 		// if miss, return black
