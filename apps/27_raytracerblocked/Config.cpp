@@ -12,5 +12,5 @@ Config::Config()
 	block   ("b",    desc("Block size"),          init(    1)),
 	dump    ("dump", desc("Dump BVH Tree"),       init(false)),
 	outfile ("out",  desc("Output file"),         init(std::string("image.ppm"))),
-	papicounter    ("papi", desc("PAPI Counter Name"),   init(std::string("PAPI_L2_DCM")))
+	papi    ("papi", desc("Activate PAPI"),       init(false))
 { }

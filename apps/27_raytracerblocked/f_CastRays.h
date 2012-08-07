@@ -97,24 +97,18 @@ struct CastRays {
 		uint rays_disabled = 0;
 
 		int papi_set = PAPI_NULL;
-		long long int counter_values[1];
-		if (!config.papicounter.empty()) {
-			counter_values[0] = 0;
-			papi_set = PAPI_NULL;
+		long long int value;
+		if (config.papi) {
 			assert(PAPI_create_eventset(&papi_set) == PAPI_OK);
-			int event;
-			char *name = strdup(config.papicounter.c_str());
-			assert(name != NULL);
-			assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
-			std::cout << name << " " << event << std::endl;
-			free(name);
-			assert(PAPI_add_event(papi_set, event) == PAPI_OK);
+			assert(PAPI_add_event(papi_set, PAPI_L2_DCM) == PAPI_OK);
 			assert(PAPI_start(papi_set) == PAPI_OK);
 		}
 		bool intersected = tree->intersect(blockStart, blockSize, colisions);
-		if (!config.papicounter.empty()) {
-			assert(PAPI_stop(papi_set, counter_values) == PAPI_OK);
-			counter_accum.get() += counter_values[0];
+		if (config.papi) {
+			assert(PAPI_stop(papi_set, value) == PAPI_OK);
+			assert(PAPI_cleanup_eventset(papi_set) == PAPI_OK);
+			assert(PAPI_destroy_eventset(&papi_set) == PAPI_OK);
+			counter_accum.get() += value;
 		}
 
 		// if miss, return black
