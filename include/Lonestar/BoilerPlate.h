@@ -43,7 +43,7 @@ static llvm::cl::opt<int> numThreads("t", llvm::cl::desc("Number of threads"), l
 void LonestarStart(int argc, char** argv, const char* app, const char* desc = 0, const char* url = 0) {
   using namespace GaloisRuntime::LL;
 
-  gPrint("Galois Benchmark Suite v" GALOIS_VERSION_STRING);
+  /*gPrint("Galois Benchmark Suite v" GALOIS_VERSION_STRING);
   gPrint(" (r%d)\n", SVNVERSION);
   gPrint("Copyright (C) " GALOIS_COPYRIGHT_YEAR_STRING " The University of Texas at Austin\n");
   gPrint("http://iss.ices.utexas.edu/galois/\n\n");
@@ -51,7 +51,7 @@ void LonestarStart(int argc, char** argv, const char* app, const char* desc = 0,
   gPrint("%s\n", desc ? desc : "");
   if (url) {
     gPrint("http://iss.ices.utexas.edu/?p=projects/galois/benchmarks/%s\n", url);
-  }
+  }*/
 
   std::ostringstream cmdout;
   for (int i = 0; i < argc; ++i) {
@@ -59,10 +59,10 @@ void LonestarStart(int argc, char** argv, const char* app, const char* desc = 0,
     if (i != argc - 1)
       cmdout << " ";
   }
-  gInfo("CommandLine %s", cmdout.str().c_str());
+  // gInfo("CommandLine %s", cmdout.str().c_str());
   char name[256];
   gethostname(name, 256);
-  gInfo("Hostname %s", name);
+  // gInfo("Hostname %s", name);
   gFlush();
 
   llvm::cl::ParseCommandLineOptions(argc, argv);

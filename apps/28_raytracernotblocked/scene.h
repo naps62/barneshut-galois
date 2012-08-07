@@ -7,9 +7,10 @@
 #include <CGAL/spatial_sort.h>
 #include "sorting_traits.h"
 
-inline unsigned long getThreadId() {
-	return GaloisRuntime::LL::getTID();
-}
+/**
+ * TODO fix this stuff
+ */
+
 
 template<typename T>
 struct Deref : public std::unary_function<T, T*> {
@@ -25,9 +26,9 @@ wrap(std::vector<Pixel>::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Pixel>());
 }
 
-boost::transform_iterator<Deref<BlockDef>, BlockList::iterator>
-wrap(BlockList::iterator it) {
-	return boost::make_transform_iterator(it, Deref<BlockDef>());
+boost::transform_iterator<Deref<Ray*>, RayList::iterator>
+wrap(RayList::iterator it) {
+	return boost::make_transform_iterator(it, Deref<Ray*>());
 }
 
 boost::transform_iterator<Deref<RNG>, std::vector<RNG>::iterator>
@@ -73,67 +74,56 @@ struct Scene {
 	 * Main function
 	 */
 	void raytrace() {
-		Galois::StatTimer T_fullLoop("FullLoop");
+		Galois::StatTimer T_primaryRayGen("PrimaryRayGen");
 		Galois::StatTimer T_rayTrace("RayTrace");
 		Galois::setActiveThreads(numThreads);
 
 		RayList rays(config.spp);
-		BlockList blocks;
+		//BlockList blocks;
 		SpatialRayOriginSortingTraits sort_origin_traits;
 		vector<RNG> rngs(numThreads);
-
-		//	PAPI preparation
-		Galois::GAccumulator<long long> counter_accum;
-		counter_accum.reset(0);
-		if (!config.papicounter.empty()) {
-			std::cout << "Using PAPI" << std::endl;
-			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
-			assert(PAPI_thread_init(getThreadId) == PAPI_OK);
-		}
 
 		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());
 
 		// 1. Index rays into blocks
-		calcBlock(blocks, config.block, rays.size());
+		//calcBlock(blocks, config.block, rays.size());
 
 		// 2. Allocate rays.
 		//    malloc() is serialized, so no need for for_each here
 		for(uint sample = 0; sample < rays.size(); ++sample) {
-			rays[sample] = new Ray();
+			rays[sample] = new Ray();	
 		}
 		
 		// 3. Main loop - for each pixel
-		T_fullLoop.start();
 		for(uint p = 0; p < img.size(); ++p) {
 			Pixel& pixel = img.pixels[p];
 			Galois::GAccumulator<uint> accum;
 			accum.reset(0);
 
 			// 3.1. Compute primary ray directions
-			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), PrimaryRayGen(cam, img, pixel, rays, rngs));
+			T_primaryRayGen.start();
+			Galois::for_each(wrap(rays.begin()), wrap(rays.end()), PrimaryRayGen(cam, img, pixel, rngs));
+			T_primaryRayGen.stop();
 
 			// 3.2. While there are rays to compute
+			T_rayTrace.start();
 			uint depth = 0;
 			while(accum.get() != rays.size()) {
 
 				// 3.2.1. Globally sort all rays
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
 
-				// 2.3.2. Locally sort each block of rays
-				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), SpatialSortBlocks(rays));
-
 				// 2.3.3. Cast'em all
-				T_rayTrace.start();
-				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, accum, counter_accum, depth, rngs));
-				T_rayTrace.stop();
+				Galois::for_each(wrap(rays.begin()), wrap(rays.end()), CastRays(cam, tree, img, pixel, config, accum, depth, rngs));
 				
 				depth++;
 			}
+			T_rayTrace.stop();
 
 
 			// TODO reduce the vector to get final pixel value
 			Galois::GAccumulator<Vec> gather;
-			Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), ReduceRays(rays, gather));
+			Galois::for_each(wrap(rays.begin()), wrap(rays.end()), ReduceRays(rays.size(), gather));
 
 			pixel.setColor(gather.get());
 			//Galois::GAccumulator<double> pixel_x;
@@ -141,13 +131,8 @@ struct Scene {
 
 			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * p / (img.size())) << '%';
 		}
-		T_fullLoop.stop();
 
 		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
-
-		if (!config.papicounter.empty()) {
-			std::cout << "\n\nPAPI Value: " << counter_accum.get() << std::endl;
-		}
 	}
 
 	/** save image to file */
@@ -165,19 +150,7 @@ struct Scene {
 	private:
 
 	// generates a list of index pairs, to group samples into blocks
-	void calcBlock(BlockList& blocks, uint block_size, uint total) {
-		uint start = 0;
-		uint end = block_size;
 
-		while(start < total) {
-			blocks.push_back(BlockDef(start, end));
-
-			start = end;
-			end += block_size;
-			if (end > total)
-				end = total;
-		}
-	}
 
 	/** initializes scene with some objects */
 	void initScene(uint n) {

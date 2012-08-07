@@ -35,6 +35,9 @@ struct CastRays {
 	// how many rays left to process
 	Galois::GAccumulator<uint>& accum;
 
+	// cache misses accumulator
+	Galois::GAccumulator<long long int>& counter_accum;
+
 	// whats the depth of the current rays?
 	const uint depth;
 
@@ -51,6 +54,7 @@ struct CastRays {
 				RayList& _rays,
 				const Config& _config,
 				Galois::GAccumulator<uint>& _accum,
+				Galois::GAccumulator<long long int>& _counter_accum,
 				const uint _depth,
 				std::vector<RNG>& _rngs)
 	:	cam(_cam),
@@ -60,6 +64,7 @@ struct CastRays {
 		rays(_rays),
 		config(_config),
 		accum(_accum),
+		counter_accum(_counter_accum),
 		depth(_depth),
 		rngs(_rngs)
 	{ }
@@ -91,8 +96,29 @@ struct CastRays {
 
 		uint rays_disabled = 0;
 
+		int papi_set = PAPI_NULL;
+		long long int counter_values[1];
+		if (!config.papicounter.empty()) {
+			counter_values[0] = 0;
+			papi_set = PAPI_NULL;
+			assert(PAPI_create_eventset(&papi_set) == PAPI_OK);
+			int event;
+			char *name = strdup(config.papicounter.c_str());
+			assert(name != NULL);
+			assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
+			std::cout << name << " " << event << std::endl;
+			free(name);
+			assert(PAPI_add_event(papi_set, event) == PAPI_OK);
+			assert(PAPI_start(papi_set) == PAPI_OK);
+		}
+		bool intersected = tree->intersect(blockStart, blockSize, colisions);
+		if (!config.papicounter.empty()) {
+			assert(PAPI_stop(eventSet, counter_values) == PAPI_OK);
+			counter_accum.get() += counter_values[0];
+		}
+
 		// if miss, return black
-		if (!tree->intersect(blockStart, blockSize, colisions)) {
+		if (!intersected) {
 			// std::cout << "ahah fuck you and your cousin" << std::endl;
 			for(uint i = block.first; i < block.second; ++i) {
 				if (rays[i]->valid) {

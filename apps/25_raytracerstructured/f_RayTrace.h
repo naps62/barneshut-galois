@@ -159,7 +159,7 @@ struct RayTrace {
 		}
 
 		Vec result = obj.emission + f.mult(radiance(childRay, depth, Xi) * weight);
-		std::cout << depth << " " << result << " " << obj.rad << " " << f << " " << obj.emission << std::endl;
+		//std::cout << depth << " " << result << " " << obj.rad << " " << f << " " << obj.emission << std::endl;
 		return result;
 	}
 

@@ -11,8 +11,6 @@
 #include "Galois/Statistic.h"
 #include "Lonestar/BoilerPlate.h"
 
-#include "papi.h"
-
 
 /** clamps a value between 0 and 1 */
 inline double clamp(double x) {
@@ -34,13 +32,12 @@ inline int toInt(double x) {
 typedef std::vector<Ray*>    RayList;
 typedef std::vector<Object*> ObjectList;
 
-typedef std::pair<uint, uint> BlockDef;
-typedef std::vector<BlockDef > BlockList;
+//typedef std::pair<uint, uint> BlockDef;
+//typedef std::vector<BlockDef > BlockList;
 
 #include "Config.h"
 #include "Rng.h"
 #include "f_InitRNG.h"
-#include "f_SpatialSortBlocks.h"
 #include "f_PrimaryRayGen.h"
 #include "f_CastRays.h"
 #include "f_ReduceRays.h"

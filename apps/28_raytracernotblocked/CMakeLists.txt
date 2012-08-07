@@ -2,13 +2,13 @@ add_subdirectory(structs)
 
 site_name(host)
 if (host STREQUAL "naps62-mint")
-app(raytracerblocked main.cpp Config.cpp EXTLIBS /usr/local/lib/libCGAL.so)
+app(raytracernotblocked main.cpp Config.cpp EXTLIBS /usr/local/lib/libCGAL.so)
 else()
 include_directories(/workspace/pcosta/local/include)
-app(raytracerblocked main.cpp Config.cpp EXTLIBS "/workspace/pcosta/local/lib/libCGAL.so" /workspace/pcosta/local/lib/libpapi.a)
+app(raytracernotblocked main.cpp Config.cpp EXTLIBS "/workspace/pcosta/local/lib/libCGAL.so")
 endif()
 
-target_link_libraries(raytracerblocked STRUCTSBLOCKED)
+target_link_libraries(raytracernotblocked STRUCTSNOTBLOCKED)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
