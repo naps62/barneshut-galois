@@ -37,6 +37,7 @@ struct CastRays {
 
 	// cache misses accumulator
 	Galois::GAccumulator<long long int>& counter_accum;
+	// Galois::GAccumulator<long long int> * const counter_accum;
 
 	// whats the depth of the current rays?
 	const uint depth;
@@ -55,6 +56,7 @@ struct CastRays {
 				const Config& _config,
 				Galois::GAccumulator<uint>& _accum,
 				Galois::GAccumulator<long long int>& _counter_accum,
+				// Galois::GAccumulator<long long int> * const _counter_accum,
 				const uint _depth,
 				std::vector<RNG>& _rngs)
 	:	cam(_cam),
@@ -106,9 +108,9 @@ struct CastRays {
 		bool intersected = tree->intersect(blockStart, blockSize, colisions);
 		if (config.papi) {
 			assert(PAPI_stop(papi_set, &value) == PAPI_OK);
+			counter_accum.get() += value;
 			assert(PAPI_cleanup_eventset(papi_set) == PAPI_OK);
 			assert(PAPI_destroy_eventset(&papi_set) == PAPI_OK);
-			counter_accum.get() += value;
 		}
 
 		// if miss, return black

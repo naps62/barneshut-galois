@@ -85,7 +85,7 @@ struct Scene {
 		//	PAPI preparation
 		Galois::GAccumulator<long long> counter_accum;
 		counter_accum.reset(0);
-		if (!config.papi) {
+		if (config.papi) {
 			std::cout << "Using PAPI" << std::endl;
 			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
 			assert(PAPI_thread_init(getThreadId) == PAPI_OK);
@@ -145,7 +145,7 @@ struct Scene {
 
 		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
 
-		if (!config.papi) {
+		if (config.papi) {
 			std::cout << "\n\nPAPI Value: " << counter_accum.get() << std::endl;
 			PAPI_shutdown();
 		}
