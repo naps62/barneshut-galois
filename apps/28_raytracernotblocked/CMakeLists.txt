@@ -2,10 +2,11 @@ add_subdirectory(structs)
 
 site_name(host)
 if (host STREQUAL "naps62-mint")
-app(raytracernotblocked main.cpp Config.cpp EXTLIBS /usr/local/lib/libCGAL.so)
+include_directories(/home/naps62/.papi/include)
+app(raytracernotblocked main.cpp Config.cpp EXTLIBS /home/naps62/.papi/lib/libpapi.a /usr/local/lib/libCGAL.so)
 else()
 include_directories(/workspace/pcosta/local/include)
-app(raytracernotblocked main.cpp Config.cpp EXTLIBS "/workspace/pcosta/local/lib/libCGAL.so")
+app(raytracernotblocked main.cpp Config.cpp EXTLIBS /workspace/pcosta/local/lib/libpapi.a "/workspace/pcosta/local/lib/libCGAL.so")
 endif()
 
 target_link_libraries(raytracernotblocked STRUCTSNOTBLOCKED)

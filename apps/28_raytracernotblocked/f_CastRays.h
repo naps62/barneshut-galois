@@ -32,6 +32,9 @@ struct CastRays {
 	// how many rays left to process
 	Galois::GAccumulator<uint>& accum;
 
+	// cache misses accumulator
+	Galois::GAccumulator<long long int>& counter_accum;
+
 	// whats the depth of the current rays?
 	const uint depth;
 
@@ -47,6 +50,7 @@ struct CastRays {
 				Pixel& _pixel,
 				const Config& _config,
 				Galois::GAccumulator<uint>& _accum,
+				Galois::GAccumulator<long long int>& _counter_accum,
 				const uint _depth,
 				std::vector<RNG>& _rngs)
 	:	cam(_cam),
@@ -55,6 +59,7 @@ struct CastRays {
 		pixel(_pixel),
 		config(_config),
 		accum(_accum),
+		counter_accum(_counter_accum),
 		depth(_depth),
 		rngs(_rngs)
 	{ }
@@ -81,8 +86,23 @@ struct CastRays {
 		// id of intersected object 
 		Object* obj_ptr;
 
+		int papi_set = PAPI_NULL;
+		long long int value;
+		if (config.papi) {
+			assert(PAPI_create_eventset(&papi_set) == PAPI_OK);
+			assert(PAPI_add_event(papi_set, PAPI_TOT_INS) == PAPI_OK);
+			assert(PAPI_start(papi_set) == PAPI_OK);
+		}
+		bool intersected = tree->intersect(ray, dist, obj_ptr);
+		if (config.papi) {
+			assert(PAPI_stop(papi_set, &value) == PAPI_OK);
+			counter_accum.get() += value;
+			assert(PAPI_cleanup_eventset(papi_set) == PAPI_OK);
+			assert(PAPI_destroy_eventset(&papi_set) == PAPI_OK);
+		}
+
 		// if miss, return black
-		if (!tree->intersect(ray, dist, obj_ptr)) {
+		if (!intersected) {
 			ray.valid = false;
 			accum.get() += 1;
 			return;

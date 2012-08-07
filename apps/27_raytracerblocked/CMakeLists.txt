@@ -2,7 +2,7 @@ add_subdirectory(structs)
 
 site_name(host)
 if (host STREQUAL "naps62-mint")
-	include_directories(/home/naps62/.papi/include)
+include_directories(/home/naps62/.papi/include)
 app(raytracerblocked main.cpp Config.cpp EXTLIBS /home/naps62/.papi/lib/libpapi.a /usr/local/lib/libCGAL.so)
 else()
 include_directories(/workspace/pcosta/local/include)

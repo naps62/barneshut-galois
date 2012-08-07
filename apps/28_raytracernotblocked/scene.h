@@ -7,10 +7,9 @@
 #include <CGAL/spatial_sort.h>
 #include "sorting_traits.h"
 
-/**
- * TODO fix this stuff
- */
-
+inline unsigned long getThreadId() {
+	return GaloisRuntime::LL::getTID();
+}
 
 template<typename T>
 struct Deref : public std::unary_function<T, T*> {
@@ -74,7 +73,7 @@ struct Scene {
 	 * Main function
 	 */
 	void raytrace() {
-		Galois::StatTimer T_primaryRayGen("PrimaryRayGen");
+		Galois::StatTimer T_fullLoop("FullLoop");
 		Galois::StatTimer T_rayTrace("RayTrace");
 		Galois::setActiveThreads(numThreads);
 
@@ -82,6 +81,15 @@ struct Scene {
 		//BlockList blocks;
 		SpatialRayOriginSortingTraits sort_origin_traits;
 		vector<RNG> rngs(numThreads);
+
+		//	PAPI preparation
+		Galois::GAccumulator<long long> counter_accum;
+		counter_accum.reset(0);
+		if (config.papi) {
+			std::cout << "Using PAPI" << std::endl;
+			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
+			assert(PAPI_thread_init(getThreadId) == PAPI_OK);
+		}
 
 		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());
 
@@ -95,18 +103,17 @@ struct Scene {
 		}
 		
 		// 3. Main loop - for each pixel
+		T_fullLoop.start();
 		for(uint p = 0; p < img.size(); ++p) {
 			Pixel& pixel = img.pixels[p];
 			Galois::GAccumulator<uint> accum;
 			accum.reset(0);
 
 			// 3.1. Compute primary ray directions
-			T_primaryRayGen.start();
 			Galois::for_each(wrap(rays.begin()), wrap(rays.end()), PrimaryRayGen(cam, img, pixel, rngs));
-			T_primaryRayGen.stop();
 
 			// 3.2. While there are rays to compute
-			T_rayTrace.start();
+			
 			uint depth = 0;
 			while(accum.get() != rays.size()) {
 
@@ -114,11 +121,13 @@ struct Scene {
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
 
 				// 2.3.3. Cast'em all
-				Galois::for_each(wrap(rays.begin()), wrap(rays.end()), CastRays(cam, tree, img, pixel, config, accum, depth, rngs));
+				T_rayTrace.start();
+				Galois::for_each(wrap(rays.begin()), wrap(rays.end()), CastRays(cam, tree, img, pixel, config, accum, counter_accum, depth, rngs));
+				T_rayTrace.stop();
 				
 				depth++;
 			}
-			T_rayTrace.stop();
+			
 
 
 			// TODO reduce the vector to get final pixel value
@@ -133,6 +142,11 @@ struct Scene {
 		}
 
 		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
+
+		if (config.papi) {
+			std::cout << "\n\nPAPI Value: " << counter_accum.get() << std::endl;
+			PAPI_shutdown();
+		}
 	}
 
 	/** save image to file */

@@ -11,5 +11,6 @@ Config::Config()
 	n       ("n",    desc("Number of spheres"),   init(    2)),
 	block   ("b",    desc("Block size"),          init(    1)),
 	dump    ("dump", desc("Dump BVH Tree"),       init(false)),
-	outfile ("out",  desc("Output file"),         init(std::string("image.ppm")))
+	outfile ("out",  desc("Output file"),         init(std::string("image.ppm"))),
+	papi    ("papi", desc("Activate PAPI"),       init(false))
 { }
