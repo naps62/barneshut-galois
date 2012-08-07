@@ -11,6 +11,8 @@
 #include "Galois/Statistic.h"
 #include "Lonestar/BoilerPlate.h"
 
+#include "papi.h"
+
 
 /** clamps a value between 0 and 1 */
 inline double clamp(double x) {
