@@ -36,6 +36,7 @@ using std::string;
 #include "llvm/Support/CommandLine.h"
 #include "Lonestar/BoilerPlate.h"
 
+#include <CGAL/spatial_sort.h>
 #include <papi.h>
 
 #include "config.h"
@@ -54,6 +55,7 @@ using std::string;
 #include "f_AdvanceBodies.h"
 #include "f_ReduceBoxes.h"
 #include "utilities.h"
+#include "cgal.h"
 
 
 
@@ -102,6 +104,7 @@ namespace Barneshut {
 	void run (int nbodies, int ntimesteps, int seed) {
 		Bodies bodies;
 		BodyBlocks body_blocks;
+		SpatialBodySortingTraits sst;
 
 		generateInput(bodies, nbodies, seed);
 		/*for(int i = 0; i < nbodies; ++i)
@@ -117,6 +120,13 @@ namespace Barneshut {
 			assert(PAPI_thread_init(getTID) == PAPI_OK);
 		}
 
+		//	report activated switches
+		std::cerr << "* Using parallel implementation (Galois) with " << numThreads << " threads." << std::endl;
+		if (use_sort)
+			std::cerr << "* Using spatial sorting (bodies)." << std::endl;
+		if (block_size > 0)
+			std::cerr << "* Using point blocking." << std::endl;
+
 		//
 		// Main loop
 		//
@@ -130,13 +140,15 @@ namespace Barneshut {
 
 			//
 			// Step 0.1. Body ordering goes here
-			// 
-			/** TODO */
+			//
+			if (use_sort)
+				CGAL::spatial_sort(bodies.begin(), bodies.end(), sst);
 
 			//
 			// Step 0.2. BodyBlocks build
 			//
-			Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
+			if (block_size > 0)
+				Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
 					BodyBlocksBuild(&body_blocks, block_size));
 
 			//
@@ -161,17 +173,6 @@ namespace Barneshut {
 			ComputeCenterOfMass computeCenterOfMass(top);
 			computeCenterOfMass();
 
-			/*for(int i = 0; i < nbodies; ++i)
-			  std::cout << "body " << i << " " << &bodies[i] << std::endl;
-
-			  for(uint i = 0; i < body_blocks.size(); ++i)
-			  for(uint j = 0; j < body_blocks[j].size(); ++j)
-			  std::cout << "body " << i << " in block " << j << " " << &body_blocks[i][j] << std::endl;
-
-			  std::cout << "body 0 in node " << 0 << " " << top->child[0] << std::endl;
-			  std::cout << "body 1 in node " << 1 << " " << top->child[1] << std::endl;
-			 */
-
 			// Parallel stuff starts here
 			Galois::StatTimer T_parallel("ParallelTime");
 			T_parallel.start();
@@ -183,8 +184,13 @@ namespace Barneshut {
 			//Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
 			//    CleanComputeForces(top, box.diameter()));
 			// Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), BlockedComputeForces(top, box.diameter()));
-			BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal);
-			Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), bcf);
+			if (block_size > 0) {
+				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal);
+				Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), bcf);
+			} else {
+				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq);
+				Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()), ccf);
+			}
 
 			//
 			// Step 5. Update body positions
@@ -227,7 +233,7 @@ int main(int argc, char** argv) {
 	std::cerr << "configuration: "
 		<< nbodies << " bodies, "
 		<< ntimesteps << " time steps" << std::endl << std::endl;
-	std::cout << "Num. of threads: " << numThreads << std::endl;
+	// std::cout << "Num. of threads: " << numThreads << std::endl;
 
 	Galois::StatTimer T;
 	T.start();
