@@ -1,0 +1,97 @@
+\documentclass{beamer}
+
+\usepackage{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{epstopdf}
+\usepackage{algpseudocode}
+%\usepackage{algorithmicx}
+\usepackage{algorithm}
+
+\usepackage{subfig}
+\usepackage{algpseudocode}
+\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{relsize}%	relative font sizes
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{todonotes}
+\usepackage{xspace}
+\newcommand{\computeflux}{\texttt{compute\_flux}\xspace}
+\newcommand{\update}{\texttt{update}\xspace}
+\newcommand{\polu}{\texttt{polu}\xspace}
+\newcommand{\dirichlet}{\textit{Dirichlet}\xspace}
+
+\usepackage{todonotes}
+\presetkeys{todonotes}{inline}{}
+%\newcommand{\todoline}[2][inline]{\todo[#1]{#2}}
+
+\newcommand{\todopfac}[1]{\todo[color=red!40]{#1}}
+\newcommand{\todonaps}[1]{\todo[color=green!40]{#1}}
+
+\graphicspath{{images/}}
+
+\newsavebox{\ieeealgbox}
+\newenvironment{alg}
+  {
+   \begin{lrbox}{\ieeealgbox}
+   \begin{minipage}{\dimexpr\columnwidth-2\fboxsep-2\fboxrule}
+   \hrulefill
+   \begin{algorithmic}
+  }
+  {
+   \end{algorithmic}
+   \hrulefill
+   \end{minipage}\end{lrbox}\noindent\mbox{\usebox{\ieeealgbox}}
+  }
+
+\input{slides/00_title}
+
+
+%	beamer options
+\usetheme{CambridgeUS}
+
+\begin{document}%	begin presentation
+
+\frame[plain]{\titlepage}
+
+\frame{\frametitle{Index}\tableofcontents}
+
+% TreeTiler (the paper)
+\section{TreeTiler}
+\input{slides/10_treetiler}
+
+  \subsection{Optimization Techniques}
+  \input{slides/11_spatial_sort}
+  \input{slides/12_blocking}
+  \input{slides/13_autotuning}
+
+\section{Case Studies}
+\input{slides/20_casestudies}
+
+  \subsection{Barnes-Hut}
+  \input{slides/21_barneshut}
+  \subsection{Two Point Correlation}
+  \input{slides/22_pointcorrelation}
+  \subsection{Ray Tracer}
+  \input{slides/23_raytracer}
+
+\section{Results}
+\input{slides/30_results}
+
+% Case Studies:
+%    Barnes-hut
+%    Point correlation
+%    Ray Tracer - explain why its not an effective technique here
+%
+% Results.dump()
+
+\begin{frame}[plain]
+	\titlepage
+	\begin{center}
+		\Huge\bfseries - ? -
+	\end{center}
+\end{frame}
+
+\end{document}%	end presentation

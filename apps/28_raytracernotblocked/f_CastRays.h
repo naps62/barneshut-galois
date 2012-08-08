@@ -90,7 +90,7 @@ struct CastRays {
 		long long int value;
 		if (config.papi) {
 			assert(PAPI_create_eventset(&papi_set) == PAPI_OK);
-			assert(PAPI_add_event(papi_set, PAPI_TOT_INS) == PAPI_OK);
+			assert(PAPI_add_event(papi_set, PAPI_l2_DCM) == PAPI_OK);
 			assert(PAPI_start(papi_set) == PAPI_OK);
 		}
 		bool intersected = tree->intersect(ray, dist, obj_ptr);
