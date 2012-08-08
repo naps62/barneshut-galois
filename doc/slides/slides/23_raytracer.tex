@@ -1,4 +1,59 @@
 \frame{
 	\frametitle{Ray Tracer}
-	\todonaps{Ray Tracer}
+	
+	\begin{block}{}
+		\begin{itemize}
+			\item Simple Monte Carlo Path Tracer
+
+			\item Based on \texttt{smallpt}: \textit{Global Illumination in 99 lines of C++}
+		\end{itemize}
+	\end{block}
+
+	\begin{block}{Workflow}
+		\begin{itemize}\itemsep=15pt
+			\item Each pixel generates $N$ rays
+			\begin{itemize}
+				\item[-] $N > 10^4$
+			\end{itemize}
+
+			\item Ray list indexed into blocks
+
+			\item Spatial Sort every iteration
+
+			\item Bounding Volume Hierarchy for the scene
+		\end{itemize}
+	\end{block}
+}
+
+%
+% Strategy
+%
+\frame{
+	\frametitle{Path Tracer}
+
+	\begin{block}{Strategy}
+		\begin{itemize}
+			\item Global Spatial Sort by ray origin
+
+			\item Inside each block, Spatial Sort by ray direction
+		\end{itemize}
+	\end{block}
+}
+
+%
+% Expectations
+%
+\frame{
+	\frametitle{Ray Tracer}
+
+	\begin{block}{Expectations}
+		\begin{itemize}\itemsep=15pt
+
+			\item Speedups: Unlikely
+			\begin{itemize}
+				\item[-] Ray-Blocking only useful with large $N$
+				\item[-] But large $N$ increases divergence in rays
+			\end{itemize}
+		\end{itemize}
+	\end{block}
 }

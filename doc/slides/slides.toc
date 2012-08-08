@@ -6,4 +6,4 @@
 \beamer@subsectionintoc {2}{1}{Barnes-Hut}{8}{0}{2}
 \beamer@subsectionintoc {2}{2}{Two Point Correlation}{9}{0}{2}
 \beamer@subsectionintoc {2}{3}{Ray Tracer}{10}{0}{2}
-\beamer@sectionintoc {3}{Results}{11}{0}{3}
+\beamer@sectionintoc {3}{Results}{13}{0}{3}
