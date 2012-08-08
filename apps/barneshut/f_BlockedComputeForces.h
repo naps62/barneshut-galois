@@ -30,12 +30,17 @@ struct BlockedComputeForces {
 
 	Galois::GAccumulator<unsigned> * const tTraversalTotal;
 
-	BlockedComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL)
+	std::string papiEventName;
+	Galois::GAccumulator<long long int> * const papiValueTotal;
+
+	BlockedComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL)
 	: top(_top)
 	, diameter(_diameter)
 	, dthf(_dthf)
 	, epssq(_epssq)
 	, tTraversalTotal(_tTraversalTotal)
+	, papiEventName(_papiEventName)
+	, papiValueTotal(_papiValueTotal)
 	{
 		root_dsq = diameter * diameter * itolsq;
 	}
@@ -45,32 +50,73 @@ struct BlockedComputeForces {
 	 */
 	template<typename Context>
 	void operator()(BodiesPtr** bb, Context&) {
-		Galois::StatTimer tTraversal;
-
-		tTraversal.start();
 		BodiesPtr& bodies = **bb;
 		uint bsize = bodies.size();
-		// backup previous acceleration and initialize new accel to 0
 		Point * acc = new Point[bsize];
-		for(uint j = 0; j < bsize; ++j) {
-			Body& body = *bodies[j];
 
-			acc[j] = body.acc;
+		Galois::StatTimer tTraversal;
+		tTraversal.start();
 
-			for(int i = 0; i < 3; ++i)
-				body.acc[i] = 0;
+		if (papiEventName.empty()) {
+			// backup previous acceleration and initialize new accel to 0
+			for(uint j = 0; j < bsize; ++j) {
+				Body& body = *bodies[j];
+
+				acc[j] = body.acc;
+
+				for(int i = 0; i < 3; ++i)
+					body.acc[i] = 0;
+			}
+
+			// compute acceleration for this body
+			iterate(bodies, root_dsq);
+
+			// compute new velocity
+			for(uint j = 0; j < bsize; ++j) {
+				Body& body = *bodies[j];
+				for(int i = 0; i < 3; ++i)
+					body.vel[i] += (body.acc[i] - acc[j][i]) * dthf;
+			}
+		} else {
+			int event;
+			char * name = strdup(papiEventName.c_str());
+			assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
+			free(name);
+
+			int eventSet = PAPI_NULL;
+			assert(PAPI_create_eventset(&eventSet) == PAPI_OK);
+			assert(PAPI_add_event(eventSet, event) == PAPI_OK);
+
+			long long int value;
+			assert(PAPI_start(eventSet) == PAPI_OK);
+
+			// backup previous acceleration and initialize new accel to 0
+			for(uint j = 0; j < bsize; ++j) {
+				Body& body = *bodies[j];
+
+				acc[j] = body.acc;
+
+				for(int i = 0; i < 3; ++i)
+					body.acc[i] = 0;
+			}
+
+			// compute acceleration for this body
+			iterate(bodies, root_dsq);
+
+			// compute new velocity
+			for(uint j = 0; j < bsize; ++j) {
+				Body& body = *bodies[j];
+				for(int i = 0; i < 3; ++i)
+					body.vel[i] += (body.acc[i] - acc[j][i]) * dthf;
+			}
+
+			assert(PAPI_stop(eventSet, &value) == PAPI_OK);
+			papiValueTotal->get() += value;
+
+			assert(PAPI_cleanup_eventset(eventSet) == PAPI_OK);
+			assert(PAPI_destroy_eventset(&eventSet) == PAPI_OK);
 		}
-		
 
-		// compute acceleration for this body
-		iterate(bodies, root_dsq);
-
-		// compute new velocity
-		for(uint j = 0; j < bsize; ++j) {
-			Body& body = *bodies[j];
-			for(int i = 0; i < 3; ++i)
-				body.vel[i] += (body.acc[i] - acc[j][i]) * dthf;
-		}
 		tTraversal.stop();
 		tTraversalTotal->get() += tTraversal.get_usec();
 

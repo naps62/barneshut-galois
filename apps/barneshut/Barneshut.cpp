@@ -115,7 +115,7 @@ namespace Barneshut {
 		//  Prepare PAPI
 		long long int papi_value = 0;
 		if (!papi_event_name.empty()) {
-			std::cerr << "* Using PAPI to measure counter [" << papi_event_name << ']' << std::endl;
+			std::cerr << "* Using PAPI to measure counter [" << papi_event_name << "]." << std::endl;
 			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
 			assert(PAPI_thread_init(getTID) == PAPI_OK);
 		}
@@ -184,13 +184,15 @@ namespace Barneshut {
 			//Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
 			//    CleanComputeForces(top, box.diameter()));
 			// Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), BlockedComputeForces(top, box.diameter()));
+			Galois::GAccumulator<long long int> papi_value_total;
 			if (block_size > 0) {
-				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal);
+				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total);
 				Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), bcf);
 			} else {
-				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq);
+				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total);
 				Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()), ccf);
 			}
+			papi_value = papi_value_total.get();
 
 			//
 			// Step 5. Update body positions
@@ -218,7 +220,7 @@ namespace Barneshut {
 
 		//	Cleanup PAPI
 		if (!papi_event_name.empty()) {
-			std::cerr << papi_event_name << ":\t" << papi_value << std::endl;
+			std::cerr << "- " << papi_event_name << ":\t" << papi_value << std::endl;
 			PAPI_shutdown();
 		}
 	}
