@@ -13,4 +13,5 @@ add_subdirectory(25_raytracerstructured)
 add_subdirectory(27_raytracerblocked)
 add_subdirectory(28_raytracernotblocked)
 
+add_subdirectory(barneshut)
 add_subdirectory(pointcorrelation)
