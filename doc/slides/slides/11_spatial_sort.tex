@@ -1,4 +1,18 @@
 \frame{
 	\frametitle{Spatial Sort}
-	\todonaps{Spatial Sort}
+	%\todonaps{Spatial Sort}
+
+	\begin{columns}
+		\column{.7\textwidth}
+			\begin{itemize}\itemsep=20pt
+				\item Points closer in space are more likely to follow a similar traversal
+
+				\item By sorting items, this can be exploited for locality
+			\end{itemize}
+
+		\column{0.3\textwidth}
+		TEXT
+	\end{columns}
+
+	\textbf{Fails when traversal depth is too large to fit in cache}
 }
