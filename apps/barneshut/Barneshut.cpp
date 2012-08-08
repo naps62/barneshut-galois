@@ -213,8 +213,8 @@ namespace Barneshut {
 			}
 		}
 
-		std::cerr << '\t' << (double) tAlgorithm.get_usec() * 1e6 << " seconds" << std::endl;
-		std::cerr << '\t' << (double) tTraversalTotal.get() * 1e3 / (nbodies * ntimesteps) << " miliseconds" << std::endl;
+		std::cerr << '\t' << (double) tAlgorithm.get_usec() * 1e-6 << " seconds" << std::endl;
+		std::cerr << '\t' << (double) tTraversalTotal.get() * 1e-3 / (nbodies * ntimesteps) << " miliseconds" << std::endl;
 
 		//	Cleanup PAPI
 		if (!papi_event_name.empty()) {
