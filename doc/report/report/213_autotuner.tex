@@ -2,3 +2,11 @@
 \label{sec:optim:tuner}
 
 \todonaps{THIS}
+The optimal block size is dependent on both hardware and algorithm details, but it may also be input dependent. The optimal block size for a Barnes-Hut implementation might not be the same as the ideal block size for a Ray Tracing application. GIven that, a generic framework like \treetiler cannot make assumptions about the algorithm and the input only at compile time.
+
+For that reason, \treetiler installs an AutoTuner into the output code. This AutoTuner will perform a small sample (possibly selected randomly) of block iterations, and evaluate their performance at runtime.
+Tipically, it is expected that a block size too smal will yield bad results, possibly even worse than the original version, due to large overhead of the additional instructions for the point blocking, and because of the fact that misses in the tree occur between each block. In contrast, a block size too big wil not fit in cache, and misses will occur in the block items instead.
+
+A sweet spot is expected to occur where the block size is near ideal value, meaning the block size is large enough to avoid cache misses in the tree, but still small enough to fit in cache.
+
+The AutoTuner might then start at a small block size, and process the chosen samples, measuring the average traversao time for each subsequent block size. The time is expected to reduce until the sweet spot is reached, at which point the time will start to increase again. When this happens, the best block size is the one that yielded the lowest runtime.

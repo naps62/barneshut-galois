@@ -4,7 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
 
-% %\usepackage{graphics}%	images other than eps
+\usepackage{graphicx}%	images other than eps
 
 % \usepackage[paper=a4paper,top=2cm,left=1.5cm,right=1.5cm,bottom=2cm,foot=1cm]{geometry}
 
@@ -23,6 +23,9 @@
 % \usepackage{listings}
 % \usepackage{color}
 
+
+\graphicspath{{../images/}}
+
 %	TODO assignments and notes
 \usepackage{todonotes}
 \newcommand{\todoline}[2][inline]{\todo[#1]{#2}}
@@ -30,7 +33,8 @@
 \newcommand{\todopfac}[1]{\todo[inline,color=red!40]{#1}}
 \newcommand{\todonaps}[1]{\todo[inline,color=green!40]{#1}}
 
-\newcommand{\treetiler}{\textit{TreeTiler}}
+\usepackage{xspace}
+\newcommand{\treetiler}{\textit{TreeTiler}\xspace}
 
 % %%%%%%%%%%%
 % %  Hacks  %
