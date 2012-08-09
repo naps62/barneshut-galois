@@ -95,7 +95,7 @@ struct CastRays {
 			assert(PAPI_start(papi_set) == PAPI_OK);
 #else
 			int event;
-			char * name = "L3_CACHE_MISSES:READ_BLOCK_EXCLUSIVE:ALL_CORES";
+			char * name = "LLC_MISSES";
 			PAPI_event_name_to_code(name, &event);
 			PAPI_create_eventset(&papi_set);
 			PAPI_add_event(papi_set, event);
