@@ -1,7 +1,5 @@
 \subsubsection{Auto Tuner}
 \label{sec:optim:tuner}
-
-\todonaps{THIS}
 The optimal block size is dependent on both hardware and algorithm details, but it may also be input dependent. The optimal block size for a Barnes-Hut implementation might not be the same as the ideal block size for a Ray Tracing application. GIven that, a generic framework like \treetiler cannot make assumptions about the algorithm and the input only at compile time.
 
 For that reason, \treetiler installs an AutoTuner into the output code. This AutoTuner will perform a small sample (possibly selected randomly) of block iterations, and evaluate their performance at runtime.
