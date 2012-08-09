@@ -1,4 +1,25 @@
 \section{Environmental Setup}
-\label{sec:env}
+\label[appendix]{sec:env}
 
-\todoline{THIS}
+The tests described in this document were performed using \todoline{como é que nos referimos á maquina faraday?}.
+
+\begin{table}[!htp]
+	\begin{center}
+		\begin{tabular}{rl}
+			\hline
+			Processors per node: & 2	\\
+			Processor model: & \intel\xeon E7540\\
+			Cores per processor: & 6	\\
+			Threads per core: & 2	\\
+			Clock frequency: & 2 GHz	\\
+			\hline
+			L1 cache: & 32 KB + 32 KB per core	\\
+			L2 cache: & 256 KB per core	\\
+			L3 cache: & 18 MB shared	\\
+			RAM: & 128 GB	\\
+			\hline
+		\end{tabular}
+		\caption[\texttt{faraday.ices.utexas.edu} main specs. SeARCH Group Hex hardware description]{\texttt{faraday.ices.utexas.edu} main specs. Spee \cite{xeon7540} for further detail about this processor.}
+		\label{tab:grouphex}
+	\end{center}
+\end{table}
