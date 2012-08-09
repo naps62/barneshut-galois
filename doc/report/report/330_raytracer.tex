@@ -1,7 +1,6 @@
 \subsection{Ray Tracer}
 \label{sec:cases:ray}
 
-\todonaps{THIS}
 This was the most different and challenging test case to implement. The original source code, ``\textit{smallpt: Global Illumination in 99 lines of C++}'', is explained and available in \cite{99lines}.
 
 The original implementation of \smallpt relied on OpenMP to distribute workload accross threads. The workload were pixels, meaning that each thread would be responsible for a subset of the total pixels of the image. For each pixel, the corresponding thread would launch a given number of rays (given as a parameter) using Monte Carlo to add some randomness to their direction. Each ray was then checked against the entire list of objects composing the scene, which was implemented as a naive vector of spheres \footnote{\smallpt was optimized for code size, not speed. All objects were simply spheres (even the walls), and no acceleration structure was provided, minimizing amount of code}.
