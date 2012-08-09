@@ -101,16 +101,32 @@ struct CastRays {
 		int papi_set = PAPI_NULL;
 		long long int value;
 		if (config.papi) {
+#ifndef NDEBUG
 			assert(PAPI_create_eventset(&papi_set) == PAPI_OK);
 			assert(PAPI_add_event(papi_set, PAPI_L2_DCM) == PAPI_OK);
 			assert(PAPI_start(papi_set) == PAPI_OK);
+#else
+			int event;
+			char * name = "L3_CACHE_MISSES:READ_BLOCK_EXCLUSIVE:ALL_CORES";
+			PAPI_event_name_to_code(name, &event);
+			PAPI_create_eventset(&papi_set);
+			PAPI_add_event(papi_set, event);
+			PAPI_start(papi_set);
+#endif
 		}
 		bool intersected = tree->intersect(blockStart, blockSize, colisions);
 		if (config.papi) {
+#ifndef NDEBUG
 			assert(PAPI_stop(papi_set, &value) == PAPI_OK);
 			counter_accum.get() += value;
 			assert(PAPI_cleanup_eventset(papi_set) == PAPI_OK);
 			assert(PAPI_destroy_eventset(&papi_set) == PAPI_OK);
+#else
+			PAPI_stop(papi_set, &value);
+			counter_accum.get() += value;
+			PAPI_cleanup_eventset(papi_set);
+			PAPI_destroy_eventset(&papi_set);
+#endif
 		}
 
 		// if miss, return black

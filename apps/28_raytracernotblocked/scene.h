@@ -87,8 +87,13 @@ struct Scene {
 		counter_accum.reset(0);
 		if (config.papi) {
 			std::cout << "Using PAPI" << std::endl;
+#ifndef NDEBUG
 			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
 			assert(PAPI_thread_init(getThreadId) == PAPI_OK);
+#else
+			PAPI_library_init(PAPI_VER_CURRENT);
+			PAPI_thread_init(getThreadId);
+#endif
 		}
 
 		Galois::for_each(wrap(rngs.begin()), wrap(rngs.end()), InitRNG());

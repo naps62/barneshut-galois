@@ -77,8 +77,13 @@ int main (int argc, char *argv[]) {
 	long long int value;
 	if (!papicn.empty()) {
 		std::cerr << "* Using PAPI to measure counter [" << papicn << ']' << std::endl;
+#ifndef NDEBUG
 		assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
 		assert(PAPI_thread_init(getTID) == PAPI_OK);
+#else
+		PAPI_library_init(PAPI_VER_CURRENT);
+		PAPI_thread_init(getTID);
+#endif
 	}
 
 	//	Split into blocks
