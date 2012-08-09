@@ -12,5 +12,6 @@ Config::Config()
 	block   ("b",    desc("Block size"),          init(    1)),
 	dump    ("dump", desc("Dump BVH Tree"),       init(false)),
 	outfile ("out",  desc("Output file"),         init(std::string("image.ppm"))),
-	papi    ("papi", desc("Activate PAPI"),       init(false))
+	papi    ("papi", desc("Activate PAPI"),       init(false)),
+	sort	("sort", desc("Sort the rays."),	  init(false))
 { }

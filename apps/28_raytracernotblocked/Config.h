@@ -15,7 +15,8 @@ struct Config {
 	opt<uint>   block;
 	opt<uint>   dump;
 	opt<std::string> outfile;
-	opt<bool> papi;
+	opt<bool>	papi;
+	opt<bool>	sort;
 
 	Config();
 };

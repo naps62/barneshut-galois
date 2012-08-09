@@ -116,8 +116,17 @@ namespace Barneshut {
 		long long int papi_value = 0;
 		if (!papi_event_name.empty()) {
 			std::cerr << "* Using PAPI to measure counter [" << papi_event_name << "]." << std::endl;
+#ifndef NDEBUG
 			assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
 			assert(PAPI_thread_init(getTID) == PAPI_OK);
+#else
+			int papiVersion = PAPI_library_init(PAPI_VER_CURRENT);
+			if (papiVersion != PAPI_VER_CURRENT)
+				std::cerr << "PAPI_library_init: " << papiVersion << " [" << PAPI_VER_CURRENT << ']' << std::endl;
+			int result = PAPI_thread_init(getTID);
+			if (result != PAPI_OK)
+				std::cerr << "PAPI_thread_init: " << PAPI_strerror(result) << std::endl;
+#endif		
 		}
 
 		//	report activated switches
@@ -181,9 +190,6 @@ namespace Barneshut {
 			//
 			// Step 4. Compute forces for each body
 			//
-			//Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
-			//    CleanComputeForces(top, box.diameter()));
-			// Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), BlockedComputeForces(top, box.diameter()));
 			Galois::GAccumulator<long long int> papi_value_total;
 			if (block_size > 0) {
 				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total);

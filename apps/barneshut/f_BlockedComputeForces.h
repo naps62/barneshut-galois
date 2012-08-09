@@ -80,6 +80,7 @@ struct BlockedComputeForces {
 		} else {
 			int event;
 			char * name = strdup(papiEventName.c_str());
+#ifndef NDEBUG
 			assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
 			free(name);
 
@@ -89,6 +90,17 @@ struct BlockedComputeForces {
 
 			long long int value;
 			assert(PAPI_start(eventSet) == PAPI_OK);
+#else
+			PAPI_event_name_to_code(name, &event);
+			free(name);
+
+			int eventSet = PAPI_NULL;
+			PAPI_create_eventset(&eventSet);
+			PAPI_add_event(eventSet, event);
+
+			long long int value;
+			PAPI_start(eventSet);
+#endif
 
 			// backup previous acceleration and initialize new accel to 0
 			for(uint j = 0; j < bsize; ++j) {
@@ -110,11 +122,19 @@ struct BlockedComputeForces {
 					body.vel[i] += (body.acc[i] - acc[j][i]) * dthf;
 			}
 
+#ifndef NDEBUG
 			assert(PAPI_stop(eventSet, &value) == PAPI_OK);
 			papiValueTotal->get() += value;
 
 			assert(PAPI_cleanup_eventset(eventSet) == PAPI_OK);
 			assert(PAPI_destroy_eventset(&eventSet) == PAPI_OK);
+#else
+			PAPI_stop(eventSet, &value);
+			papiValueTotal->get() += value;
+
+			PAPI_cleanup_eventset(eventSet);
+			PAPI_destroy_eventset(&eventSet);
+#endif
 		}
 
 		tTraversal.stop();

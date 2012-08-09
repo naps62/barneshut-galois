@@ -38,6 +38,7 @@ struct KdTree {
 		void operator() (Point<K>** p, Context&) {
 			Galois::StatTimer tTraversal;
 			if (!papiEventName.empty()) {
+#ifndef NDEBUG
 				int eventSet = PAPI_NULL;
 				assert(PAPI_create_eventset(&eventSet) == PAPI_OK);
 
@@ -51,12 +52,24 @@ struct KdTree {
 				long long int value;
 
 				assert(PAPI_start(eventSet) == PAPI_OK);
+#else
+				int eventSet = PAPI_NULL;
+				PAPI_create_eventset(&eventSet);
+				int event;
+				char * name = strdup(papiEventName.c_str());
+				PAPI_event_name_to_code(name, &event);
+				free(name);
+				PAPI_add_event(eventSet, event);
+				long long int value;
+				PAPI_start(eventSet);
+#endif
 				
 				tTraversal.start();
 				count.get() += tree.correlated(**p, radius);
 				tTraversal.stop();
 				tTraversalTotal->get() += tTraversal.get_usec();
 
+#ifndef NDEBUG
 				assert(PAPI_stop(eventSet, &value) == PAPI_OK);
 
 				//	gather values
@@ -64,6 +77,12 @@ struct KdTree {
 
 				assert(PAPI_cleanup_eventset(eventSet) == PAPI_OK);
 				assert(PAPI_destroy_eventset(&eventSet) == PAPI_OK);
+#else
+				PAPI_stop(eventSet, &value);
+				papiValueTotal->get() += value;
+				PAPI_cleanup_eventset(eventSet);
+				PAPI_destroy_eventset(&eventSet);
+#endif
 			} else {
 				tTraversal.start();
 				count.get() += tree.correlated(**p, radius);

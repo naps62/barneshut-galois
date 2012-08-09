@@ -67,6 +67,7 @@ struct CleanComputeForces {
 			for(int i = 0; i < 3; ++i)
 				body.vel[i] += (body.acc[i] - acc[i]) * dthf;
 		} else {
+#ifndef NDEBUG
 			int event;
 			char * name = strdup(papiEventName.c_str());
 			assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
@@ -78,6 +79,28 @@ struct CleanComputeForces {
 
 			long long int value;
 			assert(PAPI_start(eventSet) == PAPI_OK);
+#else
+			int event;
+			char * name = strdup(papiEventName.c_str());
+			int result = PAPI_event_name_to_code(name, &event);
+			// if (result != PAPI_OK)
+			// 	std::cerr << "PAPI_event_name_to_code: " << PAPI_strerror(result) << std::endl;
+			free(name);
+
+			int eventSet = PAPI_NULL;
+			result = PAPI_create_eventset(&eventSet);
+			// if (result != PAPI_OK)
+			// 	std::cerr << "PAPI_create_eventset: " << PAPI_strerror(result) << std::endl;
+			result = PAPI_add_event(eventSet, event);
+			// if (result != PAPI_OK)
+			// 	std::cerr << "PAPI_add_event: " << PAPI_strerror(result) << std::endl;
+
+
+			long long int value;
+			result = PAPI_start(eventSet);
+			// if (result != PAPI_OK)
+			// 	std::cerr << "PAPI_start: " << PAPI_strerror(result) << std::endl;
+#endif
 
 			// backup previous acceleration and initialize new accel to 0
 			Point acc = body.acc;
@@ -91,11 +114,17 @@ struct CleanComputeForces {
 			for(int i = 0; i < 3; ++i)
 				body.vel[i] += (body.acc[i] - acc[i]) * dthf;
 
+#ifndef NDEBUG
 			assert(PAPI_stop(eventSet, &value) == PAPI_OK);
 			papiValueTotal->get() += value;
-
 			assert(PAPI_cleanup_eventset(eventSet) == PAPI_OK);
 			assert(PAPI_destroy_eventset(&eventSet) == PAPI_OK);
+#else
+			PAPI_stop(eventSet, &value);
+			papiValueTotal->get() += value;
+			PAPI_cleanup_eventset(eventSet);
+			PAPI_destroy_eventset(&eventSet);
+#endif
 		}
 
 		tTraversal.stop();
