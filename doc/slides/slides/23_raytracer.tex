@@ -16,9 +16,7 @@
 				\item[-] $N > 10^4$
 			\end{itemize}
 
-			\item Ray list indexed into blocks
-
-			\item Spatial Sort every iteration
+			\item Each ray generates new sub-rays
 
 			\item Bounding Volume Hierarchy for the scene
 		\end{itemize}
@@ -29,14 +27,27 @@
 % Strategy
 %
 \frame{
-	\frametitle{Path Tracer}
+	\frametitle{Ray Tracer}
 
 	\begin{block}{Strategy}
-		\begin{itemize}
-			\item Global Spatial Sort by ray origin
+		\begin{enumerate}\itemsep=15pt
 
-			\item Inside each block, Spatial Sort by ray direction
-		\end{itemize}
+			\item Change iteration method
+			\begin{itemize}
+				\item[-] \textbf{Original approach}: Distribute pixels accross threads
+				\item[-] \textbf{New approach}: One pixel at a time. Distribute rays
+				% NOTE: there are enough rays for this
+				% NOTE: original was using OpenMP
+			\end{itemize}
+			
+			\item Spatial Sort all rays by ray origin
+
+			\item Spatial Sort on each block by ray direction
+
+			\item Each ray updates itself, and keeps track of current contribution
+
+			\item Reduction to compute final pixel color
+		\end{enumerate}
 	\end{block}
 }
 
@@ -49,11 +60,17 @@
 	\begin{block}{Expectations}
 		\begin{itemize}\itemsep=15pt
 
-			\item Speedups: Unlikely
+			\item Ray Tracer required more data per item, and more auxiliary data during traversal
+
+			\item Ray Blocking can only be useful for more complex scenes. But that also increases ray divergence
+
+			\item Spatial Sort is not enough to keep coherence between rays.
 			\begin{itemize}
-				\item[-] Ray-Blocking only useful with large $N$
-				\item[-] But large $N$ increases divergence in rays
+				\item Other strategies solve this more effectively (e.g. Coherent Path Tracing)
 			\end{itemize}
+
+			\item Original work presents Ray Tracer as the worst test case (max speedups around 10\%)
+			
 		\end{itemize}
 	\end{block}
 }

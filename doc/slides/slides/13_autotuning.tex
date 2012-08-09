@@ -2,4 +2,12 @@
 	\frametitle{Auto Tuning}
 	\todonaps{Auto Tuning}
 
+	\begin{itemize}
+		\item Optimal block size is dependent on machine and algorithm details, and may also be input dependent
+		% NOTE: machine details:   cache size
+		% NOTE: algorithm details: optimal block size for barnes-hut is different than for ray tracer
+		% NOTE: input dependency:  ray tracer with too few spheres will not benefit from blocking at all
+
+		\item AutoTuner decides ideal block size at runtime
+	\end{itemize}
 }

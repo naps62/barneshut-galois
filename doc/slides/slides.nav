@@ -15,33 +15,35 @@
 \headcommand {\beamer@framepages {5}{5}}
 \headcommand {\slideentry {1}{1}{3}{6/6}{Optimization Techniques}{0}}
 \headcommand {\beamer@framepages {6}{6}}
-\headcommand {\sectionentry {2}{Case Studies}{7}{Case Studies}{0}}
-\headcommand {\beamer@sectionpages {3}{6}}
-\headcommand {\beamer@subsectionpages {4}{6}}
-\headcommand {\slideentry {2}{0}{4}{7/7}{}{0}}
+\headcommand {\slideentry {1}{1}{4}{7/7}{Optimization Techniques}{0}}
 \headcommand {\beamer@framepages {7}{7}}
-\headcommand {\beamer@subsectionentry {0}{2}{1}{8}{Barnes-Hut}}\headcommand {\beamer@subsectionpages {7}{7}}
-\headcommand {\slideentry {2}{1}{1}{8/8}{Barnes-Hut}{0}}
+\headcommand {\sectionentry {2}{Case Studies}{8}{Case Studies}{0}}
+\headcommand {\beamer@sectionpages {3}{7}}
+\headcommand {\beamer@subsectionpages {4}{7}}
+\headcommand {\slideentry {2}{0}{5}{8/8}{}{0}}
 \headcommand {\beamer@framepages {8}{8}}
-\headcommand {\beamer@subsectionentry {0}{2}{2}{9}{Two Point Correlation}}\headcommand {\beamer@subsectionpages {8}{8}}
-\headcommand {\slideentry {2}{2}{1}{9/9}{Two Point Correlation}{0}}
+\headcommand {\beamer@subsectionentry {0}{2}{1}{9}{Barnes-Hut}}\headcommand {\beamer@subsectionpages {8}{8}}
+\headcommand {\slideentry {2}{1}{1}{9/9}{Barnes-Hut}{0}}
 \headcommand {\beamer@framepages {9}{9}}
-\headcommand {\beamer@subsectionentry {0}{2}{3}{10}{Ray Tracer}}\headcommand {\beamer@subsectionpages {9}{9}}
-\headcommand {\slideentry {2}{3}{1}{10/10}{Ray Tracer}{0}}
+\headcommand {\beamer@subsectionentry {0}{2}{2}{10}{Two Point Correlation}}\headcommand {\beamer@subsectionpages {9}{9}}
+\headcommand {\slideentry {2}{2}{1}{10/10}{Two Point Correlation}{0}}
 \headcommand {\beamer@framepages {10}{10}}
-\headcommand {\slideentry {2}{3}{2}{11/11}{Ray Tracer}{0}}
+\headcommand {\beamer@subsectionentry {0}{2}{3}{11}{Ray Tracer}}\headcommand {\beamer@subsectionpages {10}{10}}
+\headcommand {\slideentry {2}{3}{1}{11/11}{Ray Tracer}{0}}
 \headcommand {\beamer@framepages {11}{11}}
-\headcommand {\slideentry {2}{3}{3}{12/12}{Ray Tracer}{0}}
+\headcommand {\slideentry {2}{3}{2}{12/12}{Ray Tracer}{0}}
 \headcommand {\beamer@framepages {12}{12}}
-\headcommand {\sectionentry {3}{Results}{13}{Results}{0}}
-\headcommand {\beamer@sectionpages {7}{12}}
-\headcommand {\beamer@subsectionpages {10}{12}}
-\headcommand {\slideentry {3}{0}{4}{13/13}{}{0}}
+\headcommand {\slideentry {2}{3}{3}{13/13}{Ray Tracer}{0}}
 \headcommand {\beamer@framepages {13}{13}}
-\headcommand {\slideentry {3}{0}{5}{14/14}{}{0}}
+\headcommand {\sectionentry {3}{Results}{14}{Results}{0}}
+\headcommand {\beamer@sectionpages {8}{13}}
+\headcommand {\beamer@subsectionpages {11}{13}}
+\headcommand {\slideentry {3}{0}{4}{14/14}{}{0}}
 \headcommand {\beamer@framepages {14}{14}}
-\headcommand {\beamer@partpages {1}{14}}
-\headcommand {\beamer@subsectionpages {13}{14}}
-\headcommand {\beamer@sectionpages {13}{14}}
-\headcommand {\beamer@documentpages {14}}
-\headcommand {\def \inserttotalframenumber {14}}
+\headcommand {\slideentry {3}{0}{5}{15/15}{}{0}}
+\headcommand {\beamer@framepages {15}{15}}
+\headcommand {\beamer@partpages {1}{15}}
+\headcommand {\beamer@subsectionpages {14}{15}}
+\headcommand {\beamer@sectionpages {14}{15}}
+\headcommand {\beamer@documentpages {15}}
+\headcommand {\def \inserttotalframenumber {15}}

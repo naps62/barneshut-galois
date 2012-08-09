@@ -2,8 +2,8 @@
 \select@language {english}
 \beamer@sectionintoc {1}{TreeTiler}{3}{0}{1}
 \beamer@subsectionintoc {1}{1}{Optimization Techniques}{4}{0}{1}
-\beamer@sectionintoc {2}{Case Studies}{7}{0}{2}
-\beamer@subsectionintoc {2}{1}{Barnes-Hut}{8}{0}{2}
-\beamer@subsectionintoc {2}{2}{Two Point Correlation}{9}{0}{2}
-\beamer@subsectionintoc {2}{3}{Ray Tracer}{10}{0}{2}
-\beamer@sectionintoc {3}{Results}{13}{0}{3}
+\beamer@sectionintoc {2}{Case Studies}{8}{0}{2}
+\beamer@subsectionintoc {2}{1}{Barnes-Hut}{9}{0}{2}
+\beamer@subsectionintoc {2}{2}{Two Point Correlation}{10}{0}{2}
+\beamer@subsectionintoc {2}{3}{Ray Tracer}{11}{0}{2}
+\beamer@sectionintoc {3}{Results}{14}{0}{3}
