@@ -1,3 +1,6 @@
+@string { intel = {Intel\textsuperscript{\textregistered}} }
+@string { xeon = {Xeon\textsuperscript{\textregistered}} }
+
 @inproceedings{pingali2011tao,
   title={The tao of parallelism in algorithms},
   author={Pingali, K. and Nguyen, D. and Kulkarni, M. and Burtscher, M. and Hassaan, M.A. and Kaleem, R. and Lee, T.H. and Lenharth, A. and Manevich, R. and M{\'e}ndez-Lojo, M. and others},
@@ -17,13 +20,13 @@
 }
 
 @misc{99lines,
-  title={smallpt: Global Illumination in 99 lines of C++},
+  title={smallpt: Global Illumination in 99 lines of \texttt{C++}},
   author={Kevin Beason},
   howpublished={\url{http://www.kevinbeason.com/smallpt/}}
 }
 
 @manual{xeon7540,
-  title = {Intel\textregistered Xeon\textregistered Processor E7540},
+  title = intel # " " # xeon # { Processor E7540},
   organization = {Intel Corporation},
   year = {2010},
   howpublished={\url{http://ark.intel.com/products/46492/Intel-Xeon-Processor-E7540-(18M-Cache-2_00-GHz-6_40-GTs-Intel-QPI)}}
