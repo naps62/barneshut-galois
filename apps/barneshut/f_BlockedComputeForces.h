@@ -141,6 +141,10 @@ struct BlockedComputeForces {
 		tTraversalTotal->get() += tTraversal.get_usec();
 
 		delete[] acc;
+
+		comp.lock.lock();
+		std::cout << "\finished " << comp.value++ << " / " << comp.total << endl;
+		comp.lock.unlock();
 	}
 
 	
