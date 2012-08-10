@@ -75,6 +75,7 @@ struct Scene {
 	void raytrace() {
 		Galois::StatTimer T_fullLoop("FullLoop");
 		Galois::StatTimer T_rayTrace("RayTrace");
+		Galois::StatTimer T_sort("SpatialSort");
 		Galois::setActiveThreads(numThreads);
 
 		RayList rays(config.spp);
@@ -124,7 +125,9 @@ struct Scene {
 			while(accum.get() != rays.size()) {
 
 				// 3.2.1. Globally sort all rays
+				T_sort.start();
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
+				T_sort.stop();
 
 				// 2.3.3. Cast'em all
 				Galois::for_each(wrap(rays.begin()), wrap(rays.end()), CastRays(cam, tree, img, pixel, config, accum, counter_accum, depth, rngs));
