@@ -129,6 +129,7 @@ struct Scene {
 				// 2.3.3. Cast'em all
 				T_rayTrace.start();
 				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, accum, counter_accum, depth, rngs));
+				std::cout << "asd";
 				T_rayTrace.stop();
 				
 				depth++;
