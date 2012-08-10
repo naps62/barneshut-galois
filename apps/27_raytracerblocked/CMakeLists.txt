@@ -5,7 +5,7 @@ if (host STREQUAL "naps62-mint")
 include_directories(/home/naps62/.papi/include)
 app(raytracerblocked main.cpp Config.cpp EXTLIBS /home/naps62/.papi/lib/libpapi.a /usr/local/lib/libCGAL.so)
 else()
-include_directories(/workspace/pcosta/local/include /opt/apps/papi/4.1.2.1/include ${CGAL_ROOT}/include)
+include_directories(/workspace/pcosta/local/include /opt/apps/papi/4.1.2.1/include /home1/01885/pg19837/cgal_install/include)
 app(raytracerblocked main.cpp Config.cpp EXTLIBS /workspace/pcosta/local/lib/libpapi.a /opt/apps/papi/4.1.2.1/lib/libpapi.a "/workspace/pcosta/local/lib/libCGAL.so" ${CGAL_ROOT}/lib/libCGAL.so)
 endif()
 
