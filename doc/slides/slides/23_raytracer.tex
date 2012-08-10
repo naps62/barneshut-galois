@@ -3,22 +3,22 @@
 	
 	\begin{block}{}
 		\begin{itemize}
-			\item Simple Monte Carlo Path Tracer
+			\item Simple Monte Carlo Path Tracer;
 
-			\item Based on \texttt{smallpt}: \textit{Global Illumination in 99 lines of C++}
+			\item Based on \texttt{smallpt}: \textit{Global Illumination in 99 lines of C++};
 		\end{itemize}
 	\end{block}
 
 	\begin{block}{Workflow}
 		\begin{itemize}\itemsep=15pt
-			\item Each pixel generates $N$ rays
+			\item Each pixel generates $N$ rays;
 			\begin{itemize}
-				\item[-] $N > 10^4$
+				\item[-] $N > 10^4$;
 			\end{itemize}
 
-			\item Each ray generates new sub-rays
+			\item Each ray generates new sub-rays;
 
-			\item Bounding Volume Hierarchy for the scene
+			\item Bounding Volume Hierarchy for the scene;
 		\end{itemize}
 	\end{block}
 }
@@ -32,21 +32,21 @@
 	\begin{block}{Strategy}
 		\begin{enumerate}\itemsep=15pt
 
-			\item Change iteration method
+			\item Change iteration method;
 			\begin{itemize}
-				\item[-] \textbf{Original approach}: Distribute pixels accross threads
-				\item[-] \textbf{New approach}: One pixel at a time. Distribute rays
+				\item[-] \textbf{Original approach}: Distribute pixels accross threads;
+				\item[-] \textbf{New approach}: One pixel at a time. Distribute rays;
 				% NOTE: there are enough rays for this
 				% NOTE: original was using OpenMP
 			\end{itemize}
 			
-			\item Spatial Sort all rays by ray origin
+			\item Spatial Sort all rays by ray origin;
 
-			\item Spatial Sort on each block by ray direction
+			\item Spatial Sort on each block by ray direction;
 
-			\item Each ray updates itself, and keeps track of current contribution
+			\item Each ray updates itself, and keeps track of current contribution;
 
-			\item Reduction to compute final pixel color
+			\item Reduction to compute final pixel color;
 		\end{enumerate}
 	\end{block}
 }
@@ -60,17 +60,16 @@
 	\begin{block}{Expectations}
 		\begin{itemize}\itemsep=15pt
 
-			\item Ray Tracer required more data per item, and more auxiliary data during traversal
+			\item Ray Tracer required more data per item, and more auxiliary data during traversal;
 
-			\item Ray Blocking can only be useful for more complex scenes. But that also increases ray divergence
+			\item Ray Blocking can only be useful for more complex scenes. But that also increases ray divergence;
 
-			\item Spatial Sort is not enough to keep coherence between rays.
+			\item Spatial Sort is not enough to keep coherence between rays;
 			\begin{itemize}
-				\item Other strategies solve this more effectively (e.g. Coherent Path Tracing)
+				\item Other strategies solve this more effectively (e.g. Coherent Path Tracing);
 			\end{itemize}
 
-			\item Original work presents Ray Tracer as the worst test case (max speedups around 10\%)
-			
+			\item Original work presents Ray Tracer as the worst test case (max speedups around 10\%);
 		\end{itemize}
 	\end{block}
 }

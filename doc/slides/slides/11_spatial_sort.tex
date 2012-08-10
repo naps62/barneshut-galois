@@ -5,11 +5,11 @@
 	\begin{columns}
 		\column{.6\textwidth}
 			\begin{itemize}%\itemsep=20pt
-				\item Points closer in space are more likely to follow a similar traversal
-				\item By sorting items, this can be exploited for locality
-				\item Sorting using space-filling curves
+				\item Points closer in space are more likely to follow a similar traversal;
+				\item By sorting items, this can be exploited for temporal locality;
+				\item Sorting using space-filling curves;
 				\begin{itemize}
-					\item Hilbert Curve
+					\item Implemented using the CGAL library;
 				\end{itemize}
 			\end{itemize}
 		
@@ -26,5 +26,5 @@
 			\end{figure}
 	\end{columns}
 
-	\textbf{Fails when traversal depth is too large to fit in cache}
+	\textbf{Fails when traversal depth is too large to fit in cache.}
 }

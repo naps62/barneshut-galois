@@ -10,3 +10,5 @@
 # latexmk generated files
 *.fdb_latexmk
 *.fls
+*.nav
+*.toc
