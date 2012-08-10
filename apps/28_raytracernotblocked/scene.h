@@ -145,6 +145,7 @@ struct Scene {
 
 			std::cerr << "\rRendering (" << config.spp * 4 << " spp) " << (100.0 * p / (img.size())) << '%';
 		}
+		T_fullLoop.start();
 
 		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), ClampImage());
 
