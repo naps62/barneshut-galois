@@ -1,10 +1,16 @@
 \section{Conclusions}
 \begin{frame}
 	\frametitle{Conclusions}
-	\begin{itemize}
-		\item Sorting improves locality for objects with similar traversal patterns;
+	\begin{itemize}\itemsep=15pt
+		\item Spatial Sort is relevant when traversing a recursive structure;
+		\begin{itemize}
+			\item For smaller traversals, it is enough to gain locality.
+		\end{itemize}
 
-		\item Point Blocking takes advantage of sorting by grouping the objects during the traversal;
+		\item With larger traversals, Point Blocking also proves useful;
+		%takes advantage of sorting by grouping the objects during the traversal;
+
+		\item Ray tracer limited by larger memory footprint and incoherence;
 
 		\item Results show improvements:
 		\begin{table}
