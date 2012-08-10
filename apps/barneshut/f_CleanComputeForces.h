@@ -133,7 +133,7 @@ struct CleanComputeForces {
 		tTraversalTotal->get() += tTraversal.get_usec();
 
 		comp->lock.lock();
-		std::cout << "\rfinished " << comp->val++ << " / " << comp->total;
+		std::cerr << "\rfinished " << comp->val++ << " / " << comp->total;
 		comp->lock.unlock();
 	}
 
