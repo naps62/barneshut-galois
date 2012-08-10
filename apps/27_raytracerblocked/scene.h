@@ -132,7 +132,6 @@ struct Scene {
 
 				// 2.3.3. Cast'em all
 				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, accum, counter_accum, depth, rngs));
-				std::cout << "asd";
 				
 				depth++;
 			}
