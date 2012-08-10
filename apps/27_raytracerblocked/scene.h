@@ -75,6 +75,7 @@ struct Scene {
 	void raytrace() {
 		Galois::StatTimer T_fullLoop("FullLoop");
 		Galois::StatTimer T_rayTrace("RayTrace");
+		Galois::StatTimer T_sort("SpatialSort");
 		Galois::setActiveThreads(numThreads);
 
 		RayList rays(config.spp);
@@ -119,20 +120,22 @@ struct Scene {
 
 			// 3.2. While there are rays to compute
 			uint depth = 0;
+			T_rayTrace.start();
 			while(accum.get() != rays.size()) {
 
 				// 3.2.1. Globally sort all rays
+				T_sort.start();
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
 				// 2.3.2. Locally sort each block of rays
 				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), SpatialSortBlocks(rays));
+				T_sort.stop();
 
 				// 2.3.3. Cast'em all
-				T_rayTrace.start();
 				Galois::for_each(wrap(blocks.begin()), wrap(blocks.end()), CastRays(cam, tree, img, pixel, rays, config, accum, counter_accum, depth, rngs));
-				T_rayTrace.stop();
 				
 				depth++;
 			}
+			T_rayTrace.stop();
 
 
 			// TODO reduce the vector to get final pixel value

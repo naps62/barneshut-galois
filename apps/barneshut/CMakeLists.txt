@@ -1,7 +1,7 @@
 site_name(host)
 if (NOT host STREQUAL "naps62-mint")
-	include_directories(/workspace/pcosta/local/include)
-	app(barneshut EXTLIBS /workspace/pcosta/local/lib/libCGAL.so /workspace/pcosta/local/lib/libpapi.a)
+include_directories(/workspace/pcosta/local/include)
+	app(barneshut EXTLIBS /workspace/pcosta/local/lib/libpapi.a)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")

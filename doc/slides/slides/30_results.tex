@@ -1,5 +1,21 @@
-\frame{
-	\frametitle{Results}
-	\todonaps{Results}
-	\textbf{Y U NO SPEEDUP?!}
-}
+\begin{frame}
+	\frametitle{Speedups}
+	\begin{figure}
+		% \includegraphics{results_speedups}
+	\end{figure}
+
+	Measured using \texttt{Galois::StatTimer};
+
+	Only the critical parts of the code were measured.
+\end{frame}
+
+\begin{frame}
+	\frametitle{L2 Cache Misses}
+	\begin{figure}
+		% \includegraphics{results_speedups}
+	\end{figure}
+
+	Measured using PAPI library, with the event \texttt{PAPI_L2_DCM};
+
+	Only the critical parts of the code were measured.
+\end{frame}

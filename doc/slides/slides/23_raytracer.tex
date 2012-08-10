@@ -1,75 +1,51 @@
+
 \frame{
-	\frametitle{Ray Tracer}
-	
-	\begin{block}{}
+	\frametitle{Path Tracer}
+	\vfill
+	\begin{description}
+		\item[Type:] Naive Ray Tracing algorithm;
+		\item[Domain:] Rays colliding with spheres in a 3D space;
+		\item[Goal:] Compute contribution of each path of rays, and final result (2D image);
+	\end{description}
+	\vfill
+	\begin{block}{Acceleration Structure}
 		\begin{itemize}
-			\item Simple Monte Carlo Path Tracer;
-
-			\item Based on \texttt{smallpt}: \textit{Global Illumination in 99 lines of C++};
+			\item Bounding Volume Hierarchy (for scene objects only);
+			\item Optimize collision detection between rays and objects;
 		\end{itemize}
 	\end{block}
-
-	\begin{block}{Workflow}
-		\begin{itemize}\itemsep=15pt
-			\item Each pixel generates $N$ rays;
-			\begin{itemize}
-				\item[-] $N > 10^4$;
-			\end{itemize}
-
-			\item Each ray generates new sub-rays;
-
-			\item Bounding Volume Hierarchy for the scene;
-		\end{itemize}
-	\end{block}
+	\vfill
 }
 
-%
-% Strategy
-%
 \frame{
-	\frametitle{Ray Tracer}
-
-	\begin{block}{Strategy}
-		\begin{enumerate}\itemsep=15pt
-
-			\item Change iteration method;
-			\begin{itemize}
-				\item[-] \textbf{Original approach}: Distribute pixels accross threads;
-				\item[-] \textbf{New approach}: One pixel at a time. Distribute rays;
-				% NOTE: there are enough rays for this
-				% NOTE: original was using OpenMP
-			\end{itemize}
-			
-			\item Spatial Sort all rays by ray origin;
-
-			\item Spatial Sort on each block by ray direction;
-
-			\item Each ray updates itself, and keeps track of current contribution;
-
-			\item Reduction to compute final pixel color;
-		\end{enumerate}
-	\end{block}
+	\frametitle{Strategy}
+	\begin{itemize}\itemsep=20pt
+		\item Change in the iteration method:
+		\begin{itemize}
+			\item[-] \textbf{Original approach}: Pixels are assigned to threads;
+			\item[-] \textbf{New approach}: One pixel at a time. Ray blocks are assigned to threads. This increases geometrical proximity accross all current rays;
+		\end{itemize}
+		\item Spatial Sort all rays by origin;
+		\item Spatial Sort each block by direction;
+		\item Reduction to compute final pixel value;
+	\end{itemize}
 }
 
-%
-% Expectations
-%
 \frame{
-	\frametitle{Ray Tracer}
-
-	\begin{block}{Expectations}
-		\begin{itemize}\itemsep=15pt
-
-			\item Ray Tracer required more data per item, and more auxiliary data during traversal;
-
-			\item Ray Blocking can only be useful for more complex scenes. But that also increases ray divergence;
-
-			\item Spatial Sort is not enough to keep coherence between rays;
-			\begin{itemize}
-				\item Other strategies solve this more effectively (e.g. Coherent Path Tracing);
-			\end{itemize}
-
-			\item Original work presents Ray Tracer as the worst test case (max speedups around 10\%);
+	\frametitle{Expectations}
+	\begin{itemize}\itemsep=20pt
+		\item Blocking is only useful for larger scene sizes
+		\begin{itemize}
+			\item But that decreases coherence between rays
 		\end{itemize}
-	\end{block}
+
+		\item Divergence is much higher than N-Body problems (more difficult to keep coherent blocks)
+		\begin{itemize}
+			\item Solved by other algorithms (e.g. Coherent Path Tracing)
+		\end{itemize}
+
+		\item Blocks require too much temporary data $\Rightarrow$ Increased ray size, and blocks possibly too small to achieve improvements;
+
+		\item Original work attained maximum improvements around \%;
+	\end{itemize}
 }
