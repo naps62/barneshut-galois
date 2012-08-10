@@ -1,8 +1,6 @@
 \subsubsection{Blocking}
 \label{sec:optim:block}
 
-\todonaps{THIS}
-
 Since it is likely that geometrically closer points also follow a similar traversal, which is the basis for the Spatial Sort optimization, it is also likely that those points can be processed in blocks, rather than one at a time, thus taking advantage of locality, and preventing the traversal from being evicted too soon from cache.
 
 Instead of traversing the structure for a single point, and iteratively switching points, the new strategy takes advantage of the premisse that Spatial Sort rearranges points so that a small subset of points is likely to be geometrically close to each other. This subset is grouped into a block, and the tree is traversed for that block at the same time.
