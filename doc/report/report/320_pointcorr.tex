@@ -1,4 +1,6 @@
 \subsection{Two Point Correlation}
 \label{sec:cases:pointcorr}
 
-\todopfac{THIS}
+The Two Point Correlation algorithm is in many ways similar to the Barnes-hut. This application counts the pairs of points in a space which rely within a given radius of each other. It differs from the previous example in the acceleration structure -- a kD-Tree -- and in the need for a reduction to sum the pairs counted for each point.
+
+Since this algorithm does not require any special data to be stored in the acceleration structure (the Barnes-hut requires that each node gives an estimation of its internal data), a simpler structure may be used. A kD-tree is a binary tree. In each level, the points are ordered by one of the coordinates, and the median is placed as a divider: everything 
