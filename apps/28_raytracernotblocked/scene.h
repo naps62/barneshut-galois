@@ -120,18 +120,18 @@ struct Scene {
 			// 3.2. While there are rays to compute
 			
 			uint depth = 0;
+			T_rayTrace.start();
 			while(accum.get() != rays.size()) {
 
 				// 3.2.1. Globally sort all rays
 				CGAL::spatial_sort(rays.begin(), rays.end(), sort_origin_traits);
 
 				// 2.3.3. Cast'em all
-				T_rayTrace.start();
 				Galois::for_each(wrap(rays.begin()), wrap(rays.end()), CastRays(cam, tree, img, pixel, config, accum, counter_accum, depth, rngs));
-				T_rayTrace.stop();
 				
 				depth++;
 			}
+			T_rayTrace.stop();
 			
 
 
