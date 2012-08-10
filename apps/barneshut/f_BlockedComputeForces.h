@@ -34,7 +34,7 @@ struct BlockedComputeForces {
 	std::string papiEventName;
 	Galois::GAccumulator<long long int> * const papiValueTotal;
 
-	BlockedComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL, Completeness* _comp)
+	BlockedComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL, Completeness* _comp = NULL)
 	: top(_top)
 	, diameter(_diameter)
 	, dthf(_dthf)
