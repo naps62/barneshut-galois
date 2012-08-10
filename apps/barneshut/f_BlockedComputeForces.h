@@ -18,7 +18,7 @@ struct BlockedComputeForces {
 		BodiesPtr& bodies;
 		Frame(BodiesPtr& _bodies, Octree* _node, double _dist_sq) : dist_sq(_dist_sq), node(_node), bodies(_bodies) { }
 
-		//~Frame() { delete bodies; }
+		~Frame() { delete &bodies; }
 	};
 
 	OctreeInternal* top;
@@ -191,7 +191,7 @@ struct BlockedComputeForces {
 				}
 			}
 
-			delete &(f.bodies);
+			//delete &(f.bodies);
 		}
 	}
 
