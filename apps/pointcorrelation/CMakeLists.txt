@@ -1,7 +1,7 @@
 site_name(host)
 if (NOT host STREQUAL "naps62-mint")
-	include_directories(/workspace/pcosta/local/include)
-	app(pointcorrelation main.cpp EXTLIBS /workspace/pcosta/local/lib/libCGAL.so /workspace/pcosta/local/lib/libpapi.a)
+include_directories(/workspace/pcosta/local/include /opt/apps/papi/4.1.2.1/include /home1/01885/pg19837/cgal_install/include)
+	app(pointcorrelation main.cpp EXTLIBS /opt/apps/papi/4.1.2.1/lib/libpapi.a)
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
