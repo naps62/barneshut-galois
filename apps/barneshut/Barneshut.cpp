@@ -200,11 +200,11 @@ namespace Barneshut {
 			Galois::GAccumulator<long long int> papi_value_total;
 			if (block_size > 0) {
 				comp.total = body_blocks.size();
-				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total, comp);
+				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total, &comp);
 				Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), bcf);
 			} else {
 				comp.total = bodies.size();
-				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total, comp);
+				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total, &comp);
 				Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()), ccf);
 			}
 			papi_value = papi_value_total.get();
