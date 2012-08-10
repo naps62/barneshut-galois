@@ -7,10 +7,13 @@
 		\item Point Blocking takes advantage of sorting by grouping the objects during the traversal;
 
 		\item Results show improvements:
-		\begin{description}
-			\item[Barnes-hut]
-			\item[Two-Point Correlation]
-			\item[Ray Tracer]
-		\end{description}
+		\begin{table}
+			\begin{tabular}{|c|cc|}
+				& Speedup & Misses	\\
+				Barnes-hut &  1.48 & 93\%	\\
+				Point Correlation & 1.54 & 98\%	\\
+				Ray Tracer & 0.77 & 44\%
+			\end{tabular}
+		\end{table}
 	\end{itemize}
 \end{frame}
