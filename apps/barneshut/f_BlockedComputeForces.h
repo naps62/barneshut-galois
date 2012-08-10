@@ -190,6 +190,8 @@ struct BlockedComputeForces {
 					frame_stack.push(Frame(*new_block, node, dist_sq));
 				}
 			}
+
+			delete &(f.bodies);
 		}
 	}
 
