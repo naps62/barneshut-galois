@@ -145,7 +145,7 @@ struct BlockedComputeForces {
 		delete[] acc;
 
 		comp->lock.lock();
-		std::cout << "\finished " << comp->val++ << " / " << comp->total << endl;
+		std::cout << "\rfinished " << comp->val++ << " / " << comp->total;
 		comp->lock.unlock();
 	}
 
