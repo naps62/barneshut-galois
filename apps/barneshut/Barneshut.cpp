@@ -205,7 +205,7 @@ namespace Barneshut {
 			//
 			//Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()),
 			//		AdvanceBodies(config.dthf, config.dtime));
-			//T_parallel.stop();
+			T_parallel.stop();
 
 			// std::cout 
 			// 	<< "Timestep " << step
