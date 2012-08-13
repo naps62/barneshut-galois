@@ -43,6 +43,11 @@ using std::string;
 
 
 
+struct Completeness {
+	GaloisRuntime::LL::SimpleLock<true> lock;
+	uint val;
+	uint total;
+};
 
 
 #include "f_BuildOctree.h"
@@ -69,7 +74,7 @@ static llvm::cl::opt<bool> use_sort("sort", llvm::cl::desc("Toggle using sorted 
 static llvm::cl::opt<bool> print_output("out", llvm::cl::desc("Toggle printing the final result."), llvm::cl::init(false));
 static llvm::cl::opt<int> block_size("bs", llvm::cl::desc("Block size"), llvm::cl::init(0));
 static llvm::cl::opt<string> papi_event_name("papi", llvm::cl::desc("Name of the PAPI event to measure."), llvm::cl::init(""));
-
+static llvm::cl::opt<bool> output("out", llvm::cl::desc("Percentage Output"), llvm::cl::init(false));
 
 
 namespace Barneshut {
@@ -105,6 +110,8 @@ namespace Barneshut {
 		Bodies bodies;
 		BodyBlocks body_blocks;
 		SpatialBodySortingTraits sst;
+		Completeness comp;
+		comp.val = 0;
 
 		generateInput(bodies, nbodies, seed);
 		/*for(int i = 0; i < nbodies; ++i)
@@ -192,10 +199,12 @@ namespace Barneshut {
 			//
 			Galois::GAccumulator<long long int> papi_value_total;
 			if (block_size > 0) {
-				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total);
+				comp.total = body_blocks.size();
+				BlockedComputeForces bcf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total, &comp);
 				Galois::for_each<WL>(wrap(body_blocks.begin()), wrap(body_blocks.end()), bcf);
 			} else {
-				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total);
+				comp.total = bodies.size();
+				CleanComputeForces ccf(top, box.diameter(), config.itolsq, config.dthf, config.epssq, &tTraversalTotal, papi_event_name, &papi_value_total, &comp);
 				Galois::for_each<WL>(wrap(bodies.begin()), wrap(bodies.end()), ccf);
 			}
 			papi_value = papi_value_total.get();

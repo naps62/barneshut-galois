@@ -29,11 +29,12 @@ struct CleanComputeForces {
 	double epssq;
 
 	Galois::GAccumulator<unsigned> * const tTraversalTotal;
+	Completeness* comp;
 
 	std::string papiEventName;
 	Galois::GAccumulator<long long int> * const papiValueTotal;
 
-	CleanComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL)
+	CleanComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL, Completeness* _comp = NULL)
 	: top(_top)
 	, diameter(_diameter)
 	, dthf(_dthf)
@@ -41,6 +42,7 @@ struct CleanComputeForces {
 	, tTraversalTotal(_tTraversalTotal)
 	, papiEventName(_papiEventName)
 	, papiValueTotal(_papiValueTotal)
+	, comp(_comp)
 	{
 		root_dsq = diameter * diameter * itolsq;
 	}
@@ -129,6 +131,10 @@ struct CleanComputeForces {
 
 		tTraversal.stop();
 		tTraversalTotal->get() += tTraversal.get_usec();
+
+		comp->lock.lock();
+		std::cerr << "\rfinished " << comp->val++ << " / " << comp->total;
+		comp->lock.unlock();
 	}
 
 

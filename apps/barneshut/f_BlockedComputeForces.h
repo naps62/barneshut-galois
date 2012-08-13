@@ -15,10 +15,14 @@ struct BlockedComputeForces {
 	struct Frame {
 		double dist_sq;
 		Octree* node;
-		BodiesPtr& bodies;
-		Frame(BodiesPtr& _bodies, Octree* _node, double _dist_sq) : dist_sq(_dist_sq), node(_node), bodies(_bodies) { }
+		// BodiesPtr& bodies;
+		BodiesPtr bodies;
+		Frame(BodiesPtr& _bodies, Octree* _node, double _dist_sq) : dist_sq(_dist_sq), node(_node)
+		// , bodies(_bodies)
+		, bodies(_bodies.begin(), _bodies.end())
+		{ }
 
-		//~Frame() { delete bodies; }
+		// ~Frame() { delete &bodies; }
 	};
 
 	OctreeInternal* top;
@@ -29,11 +33,12 @@ struct BlockedComputeForces {
 	double epssq;
 
 	Galois::GAccumulator<unsigned> * const tTraversalTotal;
+	Completeness* comp;
 
 	std::string papiEventName;
 	Galois::GAccumulator<long long int> * const papiValueTotal;
 
-	BlockedComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL)
+	BlockedComputeForces(OctreeInternal* _top, double _diameter, double itolsq, double _dthf, double _epssq, Galois::GAccumulator<unsigned> * const _tTraversalTotal = NULL, const std::string& _papiEventName = "", Galois::GAccumulator<long long int> * const _papiValueTotal = NULL, Completeness* _comp = NULL)
 	: top(_top)
 	, diameter(_diameter)
 	, dthf(_dthf)
@@ -41,6 +46,7 @@ struct BlockedComputeForces {
 	, tTraversalTotal(_tTraversalTotal)
 	, papiEventName(_papiEventName)
 	, papiValueTotal(_papiValueTotal)
+	, comp(_comp)
 	{
 		root_dsq = diameter * diameter * itolsq;
 	}
@@ -141,6 +147,10 @@ struct BlockedComputeForces {
 		tTraversalTotal->get() += tTraversal.get_usec();
 
 		delete[] acc;
+
+		comp->lock.lock();
+		std::cerr << "\rfinished " << comp->val++ << " / " << comp->total;
+		comp->lock.unlock();
 	}
 
 	
@@ -153,7 +163,8 @@ struct BlockedComputeForces {
 		Point pos_diff;
 
 		while(!frame_stack.empty()) {
-			BodiesPtr* new_block = new BodiesPtr();
+			// BodiesPtr* new_block = new BodiesPtr();
+			BodiesPtr new_block;
 			Frame f = frame_stack.top();
 			frame_stack.pop();
 
@@ -168,11 +179,11 @@ struct BlockedComputeForces {
 					if (&body != f.node)
 						handleInteraction(body, f.node, dist_sq, pos_diff);
 				} else {
-					new_block->push_back(&body);
+					new_block.push_back(&body);
 				}
 			}
 
-			if (new_block->size() > 0) {
+			if (new_block.size() > 0) {
 				double dist_sq = f.dist_sq * 0.25;
 
 				for(int i = 0; i < 8; ++i) {
@@ -181,9 +192,11 @@ struct BlockedComputeForces {
 					if (node == NULL)
 						break;
 
-					frame_stack.push(Frame(*new_block, node, dist_sq));
+					frame_stack.push(Frame(new_block, node, dist_sq));
 				}
 			}
+
+			//delete &(f.bodies);
 		}
 	}
 
