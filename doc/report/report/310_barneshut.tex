@@ -1,12 +1,11 @@
-\subsection{Barnes-Hut}
+\subsection{Barnes-Hut (BH)}
 \label{sec:cases:barnes}
 
-\todoline{THIS}
 For the first test case, the Barnes-Hut implementation provided in the sample applications of the Galois framework was used.
-This implementation used an Octree as the acceleration structure, and served as a starting point to the usage of the Galois framework. Only the optimizations were left to implement.
+This implementation used an Octree as the acceleration structure, and served as a starting point to the usage of Galois. Only the optimizations were left to implement.
 
 An Octree structure divides the space equally in eight subspaces recursively. In the Barnes-hut algorithm, it allows the contribution of a set points to be estimated by the contribution of the subspace they belong to, given that the distance between the point and the subspace is enough to make the contribution of each individual body almost neglectable.
 
-As stated in \cref{sec:spatial_sort}, the CGAL library was used to implement the spatial sorting of the bodies according to their coordinates in the space.
+As stated in \cref{sec:optim:sort}, the CGAL library was used to implement the spatial sorting of the bodies according to their coordinates in the space.
 
 To apply Point Blocking, the traversal of the Octree was changed in order to accept a block of bodies (in contrast to a single body in the original implementation). During the traversal, each node of the tree would evaluate which bodies would need to descend further in the structure, and a new block containing only those proceeds.
