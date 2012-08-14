@@ -1,18 +1,18 @@
 \section{Conclusions}
 \label{sec:conclusion}
 
-In this document, two optimizations performed by the \treetiler framework to increase locality in irregular applications with acceleration structures were reviewed and applied to three distinct examples (Barnes-hut, Two Point Correlation and a Ray Tracer) using the Galois framework.
+In this document, two optimizations performed by the \treetiler framework to increase locality in irregular applications with acceleration structures were reviewed and applied to three distinct examples (Barnes-Hut, Two Point Correlation and a Ray Tracer) using the Galois framework.
 
 The first optimization consisted in sorting the domain objects in such a way that similar patterns traversing the acceleration structure would be processed consecutively. This allows an increase in temporal locality, but fails when the traversal is too deep to fit in cache.
 
 Blocking (the second optimization) applies a tilling approach to group objects during the traversal of the tree. Applied together with Sorting this amplifies temporal locality, allowing multiple objects with similar patterns to traverse the tree together, thus decreasing cache misses for each level of the acceleration structure.
 
-For Barnes-hut, Galois already presented a functional implementation, using an Octree. The implementation of the Sorting optimization was performed using the CGAL library to spatially sort the bodies. Blocking required a change in the Octree traversal so that groups of bodies would be considered together for each node.
+For Barnes-Hut, Galois already presented a functional implementation, using an Octree. The implementation of the Sorting optimization was performed using the CGAL library to spatially sort the bodies. Blocking required a change in the Octree traversal so that groups of bodies would be considered together for each node.
 
-The Two Point Correlation example was implemented entirely from scratch using a kD-Tree as an acceleration structure. Also being an N-Body problem, it differs from the Barnes-hut example in both the acceleration structure and the need for a reduction to compute the final result in a parallel execution. Despite that, the implementation of both optimizations is similar.
+The Two Point Correlation example was implemented entirely from scratch using a kD-Tree as an acceleration structure. Also being an N-Body problem, it differs from the Barnes-Hut example in both the acceleration structure and the need for a reduction to compute the final result in a parallel execution. Despite that, the implementation of both optimizations is similar.
 
 As for the Ray Tracer, an implementation already available online was used as the base. The final implementation processes one pixel at a time parallelizing the computation of the rays. Due to the increased complexity of this problem, where both the origin and the direction of the rays must be taken into account for Sorting, rays are resorted and blocks rebuilt after each level of rays has been computed.
 
-Results showed significant improvements in speedups due to the decrease of cache misses in both Barnes-hut and the Two Point Correlation example. While improvements regarding cache misses also exist in the Ray Tracer example, the highly divergent characteristics of the algorithm make the management of the blocks too costfull for any speedups to exist.
+Results showed significant improvements in speedups due to the decrease of cache miss rates in both the Barnes-Hut and the Two Point Correlation example. While improvements regarding miss rates also exist in the Ray Tracer example, the highly divergent characteristics of the algorithm make the management of the blocks too costfull for any speedups to exist.
 
-Proven the effects of the described optimizations in the temporal locality of irregular structures, future work can focus in implementing a generic way for Galois to apply these optimizations at compile time, as described in the \treetiler framework. After this, an automatic tuning tool similar to the AutoTuner in \treetiler could be implemented to optimize the parameters for a given implementation in runtime.
+Proven the effects of the described optimizations in the temporal locality of irregular structures, future work can focus in implementing a generic way for Galois to apply these optimizations at compile time, as described in \cite{tree_tiler}. After this, an automatic tuning tool similar to the AutoTuner in \treetiler could be implemented to optimize the parameters for a given implementation in runtime.

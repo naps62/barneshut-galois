@@ -1,27 +1,25 @@
 \section{Environmental Setup}
 \label[appendix]{sec:env}
 
-\todopfac{Mudar isto para falar da Maxwell}
-
-The tests described in this document were performed using Faraday machine\footnote{\ttfamily faraday.ices.utexas.edu}. 
+All the results retrieved for this document were obtained using tests performed in the Maxwell machine\footnote{\ttfamily maxwell.ices.utexas.edu}. \Cref{tab:maxwell} shows the hardware description of this machine.
 
 \begin{table}[!htp]
 	\begin{center}
 		\begin{tabular}{rl}
 			\hline
 			Processors: & 4	\\
-			Processor model: & \intel\xeon E7540\\
+			Processor model: & \intel\xeon X5570	\\
 			Cores per processor: & 6	\\
 			Threads per core: & 2	\\
-			Clock frequency: & 2.00 GHz	\\
+			Clock frequency: & 2.93 GHz	\\
 			\hline
 			L1 cache: & 32 KB + 32 KB per core	\\
 			L2 cache: & 256 KB per core	\\
-			L3 cache: & 18 MB shared	\\
-			RAM: & 128 GB	\\
+			L3 cache: & 8 MB shared	\\
+			RAM: & 23 GB	\\
 			\hline
 		\end{tabular}
-		\caption[Faraday machine hardware description.]{Faraday machine hardware description. See \cite{xeon7540} for further detail about this processor.}
-		\label{tab:grouphex}
+		\caption[Maxwell machine hardware description.]{Maxwell machine hardware description. See \cite{xeon5570} for further detail about this processor.}
+		\label{tab:maxwell}
 	\end{center}
 \end{table}

@@ -4,7 +4,7 @@
 For the first test case, the Barnes-Hut implementation provided in the sample applications of the Galois framework was used.
 This implementation used an Octree as the acceleration structure, and served as a starting point to the usage of Galois. Only the optimizations were left to implement.
 
-An Octree structure divides the space equally in eight subspaces recursively. In the Barnes-hut algorithm, it allows the contribution of a set points to be estimated by the contribution of the subspace they belong to, given that the distance between the point and the subspace is enough to make the contribution of each individual body almost neglectable.
+An Octree structure divides the space equally in eight subspaces recursively. In the Barnes-Hut algorithm, it allows the contribution of a set points to be estimated by the contribution of the subspace they belong to, given that the distance between the point and the subspace is enough to make the contribution of each individual body almost neglectable.
 
 As stated in \cref{sec:optim:sort}, the CGAL library was used to implement the spatial sorting of the bodies according to their coordinates in the space.
 

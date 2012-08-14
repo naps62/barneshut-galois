@@ -24,7 +24,7 @@ Upon a collision, the ray will update its contribution and weight to the final p
 
 During the development of this test case, it was noted that not only the irregularity was likely much higher than in the other samples, hindering improvements. The amount of extra auxiliary data required to keep track of all collision information during the traversal is also much higher.
 
-Another fact that limits improvements is that this problem deals with two particular items: rays and objects on the scene, where only the objects are indexed into an acceleration structure. In both Barnes-hut and Point Correlation, the items traversing the structure were the points themselves, which reduces memory footprint. Here, a list of rays is accessing a different set of items, the objects in the scene.
+Another fact that limits improvements is that this problem deals with two particular items: rays and objects on the scene, where only the objects are indexed into an acceleration structure. In both Barnes-Hut and Point Correlation, the items traversing the structure were the points themselves, which reduces memory footprint. Here, a list of rays is accessing a different set of items, the objects in the scene.
 
 This should probably translate to a smaller ideal block size for this particular problem, but that may itself be a problem, as that block size may also be too small for any substantial gain. 
 
