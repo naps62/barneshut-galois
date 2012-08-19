@@ -10,10 +10,9 @@ struct Deref : public std::unary_function<T, T*> {
 	T* operator()(T& item) const { return &item; }
 };
 
-boost::transform_iterator<Deref<Ray>, Rays::iterator> 
-wrap(Rays::iterator it) {
+/*boost::transform_iterator<Deref<Ray>, Rays::iterator>  wrap(Rays::iterator it) {
 	return boost::make_transform_iterator(it, Deref<Ray>());
-}
+}*/
 
 boost::transform_iterator<Deref<Pixel>, std::vector<Pixel>::iterator>
 wrap(std::vector<Pixel>::iterator it) {
@@ -23,12 +22,17 @@ wrap(std::vector<Pixel>::iterator it) {
 /** Scene representation */
 struct Scene {
 
+	// global config reference
 	const Config& config;
+
+	// camera
 	const Camera cam;
 
 	// objects, including boxes on the borders
 	ObjectList objects;
-	BVHTree* root;
+
+	// 
+	BVHTree* tree;
 
 	Image img;
 
@@ -49,7 +53,7 @@ struct Scene {
 		initScene(config.n);
 
 		if (config.dump)
-			root->dumpDot(std::cout);
+			tree->dumpDot(std::cout);
 	}
 
 	/**
@@ -63,7 +67,7 @@ struct Scene {
 		// Step 1. Compute total radiance for each pixel. Each ray has a contribution of 0.25/spp to its corresponding pixel
 		//
 		T_rayTrace.start();
-		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), RayTrace(cam, root, img, config, completeness));
+		Galois::for_each(wrap(img.pixels.begin()), wrap(img.pixels.end()), RayTrace(cam, tree, img, config, completeness));
 		T_rayTrace.stop();
 	}
 
@@ -84,7 +88,7 @@ struct Scene {
 	/** initializes scene with some objects */
 	void initScene(uint n) {
 		allocSpheres(n);
-		root = new BVHTree(objects);
+		tree = new BVHTree(objects);
 	}
 
 	void allocSpheres(uint n) {

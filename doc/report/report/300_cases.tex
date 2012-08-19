@@ -1,0 +1,21 @@
+\section{Case Studies}
+\label{sec:cases}
+
+The studied optimizations, previously described in \cref{sec:optim} were applied to three different algorithms. The work focused mostly on the Spatial Sort and Point Blocking techniques. AutoTuner was not implemented, as this was not a generic framework like \treetiler, and as such there was no need for a tool to automatically determine the ideal parameters. The implemented test cases were:
+
+\begin{description}
+	\item[\textbf{Barnes-Hut}]
+		This was the first test case, based on the implementation provided on the sample applications from the Galois framework. The acceleration structure used here was the already provided Octree.
+
+	\item[\textbf{Point Correlation}]
+		Implemented from scratch. In terms of implementation, it is mostly equivalent to that of the Barnes-Hut example, with the biggest difference being in the acceleration structure used, which is a kD-Tree rather than an Octree;
+
+	\item[\textbf{Ray Tracer}]
+		Based on a simple unoptimized implementation in OpenMP. A Bounding Volume Hierarchy implementation was designed for the acceleration structure.
+\end{description}
+
+\Cref{sec:cases:barnes,sec:cases:pointcorr,sec:cases:ray} explain with some more detail each test case.
+
+\input{report/310_barneshut}
+\input{report/320_pointcorr}
+\input{report/330_raytracer}

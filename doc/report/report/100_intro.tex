@@ -1,0 +1,8 @@
+\section{Introduction}
+\label{sec:intro}
+
+This document follows the work described in \cite{tree_tiler}, where a framework called TreeTiler is presented, to optimize, at both compile time and run time, locality of algorithms relying on the traversal of recursive data structures.
+
+In the following sections, the optimizations implemented in the TreeTiler framework are reviewed and applied to three test cases. These cases were selected to match the experiences performed in \cite{tree_tiler} and use the Galois framework\cite{galois} for parallelization. The goal of this document is to study the impact of these optimizations along with Galois.
+
+\Cref{sec:tiler} explains the original work and the \treetiler framework, with a particular focus on the implemented optimizations in \cref{sec:optim}. In \cref{sec:cases} the implemented test cases and each of their particularities are explained. Measurement results are all presented in \cref{sec:results} with some final considerations and conclusions in \cref{sec:conclusion}. \Cref{sec:env} detail the testing environment used to achieve the results shown.

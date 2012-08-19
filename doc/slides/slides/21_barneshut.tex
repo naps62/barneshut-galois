@@ -1,0 +1,39 @@
+\begin{frame}
+	\frametitle{Barnes-Hut}
+	\vfill
+	\begin{description}
+		\item[Type:] N-Body problem;
+		\item[Domain:] Bodies in space;
+		\item[Goal:] Compute the evolution of a system of particles in time;
+	\end{description}
+	\vfill
+	\begin{block}{Acceleration Structure}
+		\begin{itemize}
+			\item Octree;
+			\item If a given node is too far away, the node itself is used to calculate interactions;
+		\end{itemize}
+	\end{block}
+	\vfill
+\end{frame}
+
+\begin{frame}
+	\frametitle{Strategy}
+	\begin{itemize}\itemsep=20pt
+		\item Change in the tree traversal:
+		\begin{itemize}
+			\item[-] \textbf{Original approach}: The tree is analysed from the root for each body;
+			\item[-] \textbf{New approach}: The tree is analysed for a block of points at a time;
+		\end{itemize}
+		\item Spatial Sort the bodies by coordinates;
+		\item Optimization only applied to the computation of the forces.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Expectations}
+	\begin{itemize}\itemsep=20pt
+		\item For deep structures, sorting is unlikely to improve results;
+		\item Point blocking is expected to lower considerably cache misses;
+		\item Original work achieved improvements around 70\%;
+	\end{itemize}
+\end{frame}

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+using std::string;
 #include <vector>
 using std::vector;
 
@@ -17,24 +18,13 @@ using std::vector;
 #include <Galois/Galois.h>
 #include <Galois/Statistic.h>
 #include <CGAL/spatial_sort.h>
+#include <papi.h>
 
 // local includes
+#include "cgal.h"
 #include "point.h"
 #include "kdtree.h"
 #include "utilities.h"
-	
-
-
-
-
-
-// template<unsigned K>
-// unsigned correlated (vector<Point<K>*>& points, const double radius, KdTree<K>& tree) {
-// 	unsigned count = 0;
-// 	for (unsigned i = 0; i < points.size(); ++i)
-// 		count += tree.correlated(*points[i], radius);
-// 	return (count - points.size()) / 2;
-// }
 
 
 
@@ -46,58 +36,170 @@ const char* url = "pointcorrelation";
 
 static llvm::cl::opt<unsigned> npoints("n", llvm::cl::desc("Number of points"), llvm::cl::init(32));
 static llvm::cl::opt<double> radius("r", llvm::cl::desc("Threshold radius"), llvm::cl::init(3));
-static llvm::cl::opt<unsigned> threads("threads", llvm::cl::desc("Number of threads to use"), llvm::cl::init(1));
 static llvm::cl::opt<unsigned> seed("seed", llvm::cl::desc("Pseudo-random number generator seed. Defaults to current timestamp"), llvm::cl::init(time(NULL)));
+static llvm::cl::opt<unsigned> blocksize("bs", llvm::cl::desc("Block size (number of points to use in a block). Low values mean excessive number of instructions. High values exceed cache capacity."), llvm::cl::init(0));
+static llvm::cl::opt<bool> togglesort("sort", llvm::cl::desc("Toggle spatial sort."), llvm::cl::init(false));
+static llvm::cl::opt<bool> g("g", llvm::cl::desc("Toggle Galois."), llvm::cl::init(false));
+static llvm::cl::opt<string> papicn("papi", llvm::cl::desc("PAPI counter name."), llvm::cl::init(string("")));
 
 #define DIM 3
-
-struct PointSpatialSortingTraits {
-	typedef Point<3>* Point_3;
-
-	typedef struct {
-		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[0] < (*q)[0]; }
-	} Less_x_3;
-
-	typedef struct {
-		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[1] < (*q)[1]; }
-	} Less_y_3;
-
-	typedef struct {
-		bool operator() (const Point<3>* const p, const Point<3>* const q) const { return (*p)[2] < (*q)[2]; }
-	} Less_z_3;
-
-	Less_x_3 less_x_3_object() const { return Less_x_3(); }
-	Less_y_3 less_y_3_object() const { return Less_y_3(); }
-	Less_z_3 less_z_3_object() const { return Less_z_3(); }
-};
-
 
 int main (int argc, char *argv[]) {
 	LonestarStart(argc, argv, name, desc, url);
 
-	vector<Point<DIM>*> points;
+	Point<DIM>::Block points;
 
+	std::cerr << "Using " << npoints << " points." << std::endl;
 	generateInput(points, npoints, seed);
 
 	//	Sort points
-	// PointSpatialSortingTraits sst;
-	CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
+	if (togglesort) {
+		std::cerr << "* Using sorted input." << std::endl;
+		CGAL::spatial_sort(points.begin(), points.end(), PointSpatialSortingTraits());
+	}
 
 	KdTree<DIM> tree(points);
 
-	// two point correlation
-	KdTree<DIM>::Correlator correlator(tree, radius);
-	// Galois::setActiveThreads(1);
-	Galois::setActiveThreads(threads);
-	Galois::StatTimer t;
-	count.reset(0);
-	t.start();
-	// unsigned count = tree.correlated(points, radius, std::cerr);
-	Galois::for_each(Point<DIM>::wrap(points.begin()), Point<DIM>::wrap(points.end()), correlator);
-	t.stop();
-	std::cerr << "\t\t" << (double) t.get_usec() * 1e-6 << " seconds" << std::endl;
-	// std::cout << count << std::endl;
-	std::cout << (count.get() - points.size()) / 2 << std::endl;
+	//
+	unsigned result;//<	Final result.
+	Galois::StatTimer tAlgorithm;
+	double tTraversalAvg;
+
+	if (numThreads > 1)
+		g = true;
+	// const bool g = numThreads > 0;//	activate Galois
+	const bool b = blocksize > 0;//	activate blocks
+
+	typedef Point<DIM>::Block Block;
+	vector<Block> blocks;
+
+	//	Prepare PAPI
+	long long int value;
+	if (!papicn.empty()) {
+		std::cerr << "* Using PAPI to measure counter [" << papicn << ']' << std::endl;
+#ifndef NDEBUG
+		assert(PAPI_library_init(PAPI_VER_CURRENT) == PAPI_VER_CURRENT);
+		assert(PAPI_thread_init(getTID) == PAPI_OK);
+#else
+		PAPI_library_init(PAPI_VER_CURRENT);
+		PAPI_thread_init(getTID);
+#endif
+	}
+
+	//	Split into blocks
+	if (b) {
+		std::cerr << "* Using point blocking." << std::endl;
+		blocks = Point<DIM>::blocks(points, blocksize);
+	}
+
+	//	Prepare Galois
+	if (g) {
+		std::cerr << "* Using parallel implementation with Galois." << std::endl;
+		count.reset(0);
+	} else
+		std::cerr << "* Using sequential implementation." << std::endl;
+
+	//	two point correlation
+	if (g && b) {
+		//	Parallel (with Galois) and blocked
+		Galois::GAccumulator<unsigned long> tTraversalTotal;
+		tTraversalTotal.reset(0);
+		Galois::GAccumulator<long long int> papiValueTotal;
+		papiValueTotal.reset(0);
+		KdTree<DIM>::BlockedCorrelator correlator(tree, radius, &tTraversalTotal, papicn, &papiValueTotal);
+
+		tAlgorithm.start();
+		Galois::for_each(Point<DIM>::wrap(blocks.begin()), Point<DIM>::wrap(blocks.end()), correlator);
+		tAlgorithm.stop();
+
+		//	average traversal time
+		tTraversalAvg = (double) tTraversalTotal.get() / (double) points.size();
+
+		//	final correlation result
+		result = (count.get() - points.size()) / 2;
+
+		//	PAPI value
+		value = papiValueTotal.get();
+	} else if (g) {
+		//	Parallel (with Galois)
+		Galois::GAccumulator<unsigned long> tTraversalTotal;
+		tTraversalTotal.reset(0);
+		Galois::GAccumulator<long long int> papiValueTotal;
+		papiValueTotal.reset(0);
+		KdTree<DIM>::Correlator correlator(tree, radius, &tTraversalTotal, papicn, &papiValueTotal);
+
+		tAlgorithm.start();
+		Galois::for_each(Point<DIM>::wrap(points.begin()), Point<DIM>::wrap(points.end()), correlator);
+		tAlgorithm.stop();
+
+		//	average traversal time
+		tTraversalAvg = (double) tTraversalTotal.get() / (double) points.size();
+
+		//	final correlation result
+		result = (count.get() - points.size()) / 2;
+
+		//	PAPI value
+		value = papiValueTotal.get();
+	} else if (b) {
+		result = 0;
+		tAlgorithm.start();
+		for (unsigned i = 0; i < blocks.size(); ++i)
+			result += tree.correlated(blocks[i], radius);
+		tAlgorithm.stop();
+		result = (result - points.size()) / 2;
+	} else {
+		Galois::StatTimer tTraversal;
+		unsigned long tTraversalTotal = 0;
+
+		result = 0;
+
+		if (!papicn.empty()) {
+			int eventSet = PAPI_NULL;
+			assert(PAPI_create_eventset(&eventSet) == PAPI_OK);
+
+			int event;
+			char * name = strdup(papicn.c_str());
+			assert(PAPI_event_name_to_code(name, &event) == PAPI_OK);
+			free(name);
+
+			assert(PAPI_add_event(eventSet, event) == PAPI_OK);
+			assert(PAPI_start(eventSet) == PAPI_OK);
+
+			tAlgorithm.start();
+			for (unsigned i = 0; i < points.size(); ++i) {
+				tTraversal.start();
+				result += tree.correlated(*points[i], radius);
+				tTraversal.stop();
+				tTraversalTotal += tTraversal.get_usec();
+			}
+			tAlgorithm.stop();
+
+			assert(PAPI_stop(eventSet, &value) == PAPI_OK);
+			assert(PAPI_cleanup_eventset(eventSet) == PAPI_OK);
+			assert(PAPI_destroy_eventset(&eventSet) == PAPI_OK);
+		} else {
+			tAlgorithm.start();
+			for (unsigned i = 0; i < points.size(); ++i) {
+				tTraversal.start();
+				result += tree.correlated(*points[i], radius);
+				tTraversal.stop();
+				tTraversalTotal += tTraversal.get_usec();
+			}
+			tAlgorithm.stop();
+		}
+
+		tTraversalAvg = (double) tTraversalTotal / (double) points.size();
+		result = (result - points.size()) / 2;
+	}
+	std::cerr << "\t\t" << (double) tAlgorithm.get_usec() * 1e-6 << " seconds" << std::endl;
+	std::cerr << "\t\t" << tTraversalAvg * 1e-3 << " miliseconds" << std::endl;
+	std::cout << result << std::endl;
+
+	//	Cleanup PAPI
+	if (!papicn.empty()) {
+		std::cerr << "- " << papicn << ":\t" << value << std::endl;
+		PAPI_shutdown();
+	}
 
 	//	CLEANUP
 	for (unsigned i = 0; i < points.size(); ++i)

@@ -13,8 +13,8 @@ template<unsigned K>
 struct Point {
 	double coords[K];
 
-	typedef std::vector<Point<K>*> Points;
-	typedef typename Points::iterator PointsIterator;
+	typedef std::vector<Point<K>*> Block;
+	typedef typename Block::iterator BlockIterator;
 
 	struct PointComparator {
 		unsigned axis;
@@ -32,18 +32,30 @@ struct Point {
 
 	/////	Static:
 	static
-	boost::transform_iterator<Deref<Point<K>*>, PointsIterator> 
-	wrap(PointsIterator it) {
+	boost::transform_iterator<Deref<Point<K>*>, BlockIterator> 
+	wrap(BlockIterator it) {
 		return boost::make_transform_iterator(it, Deref<Point<K>*>());
 	}
 
-	/*	Blocked stuff
 	static
-	boost::transform_iterator<Deref<BodiesPtr*>, BodyBlocks::iterator>
-	wrap(BodyBlocks::iterator it) {
-		return boost::make_transform_iterator(it, Deref<BodiesPtr*>());
+	boost::transform_iterator<Deref<vector<Point<K>*>>, typename vector<vector<Point<K>*>>::iterator> 
+	wrap(typename vector<vector<Point<K>*>>::iterator it) {
+		return boost::make_transform_iterator(it, Deref<vector<Point<K>*>>());
 	}
-	*/
+
+	static
+	vector<Block> blocks (const Block& b, const unsigned blocksize) {
+		vector<Block> blocks;
+		unsigned i, j;
+		for (i = 0; i < b.size(); i = j) {
+			j = i + blocksize;
+			j = j < b.size() ? j : b.size();
+			blocks.push_back(Block());
+			for (unsigned k = i; k < j; ++k)
+				blocks.back().push_back(b[k]);
+		} 
+		return blocks;
+	}
 
 
 

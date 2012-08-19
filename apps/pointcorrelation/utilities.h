@@ -4,8 +4,12 @@
 // C++ includes
 // Library includes
 #include <boost/math/constants/constants.hpp>
+#include <Galois/Runtime/ll/TID.h>
 
 #include "point.h"
+
+inline
+unsigned long getTID() { return GaloisRuntime::LL::getTID(); }
 
 inline
 double randomDouble () { return rand() / (double) RAND_MAX; }

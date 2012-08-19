@@ -1,0 +1,50 @@
+\frame{
+	\frametitle{Path Tracer}
+	\vfill
+	\begin{description}
+		\item[Type:] Naive Ray Tracing algorithm;
+		\item[Domain:] Rays colliding with spheres in a 3D space;
+		\item[Goal:] Compute contribution of each path of rays, and final result (2D image);
+	\end{description}
+	\vfill
+	\begin{block}{Acceleration Structure}
+		\begin{itemize}
+			\item Bounding Volume Hierarchy (for scene objects only);
+			\item Optimize collision detection between rays and objects;
+		\end{itemize}
+	\end{block}
+	\vfill
+}
+
+\frame{
+	\frametitle{Strategy}
+	\begin{itemize}\itemsep=20pt
+		\item Change in the iteration method:
+		\begin{itemize}
+			\item[-] \textbf{Original approach}: Pixels are assigned to threads;
+			\item[-] \textbf{New approach}: One pixel at a time. Ray blocks are assigned to threads. This increases geometrical proximity accross all current rays;
+		\end{itemize}
+		\item Spatial Sort all rays by origin;
+		\item Spatial Sort each block by direction;
+		\item Reduction to compute final pixel value;
+	\end{itemize}
+}
+
+\frame{
+	\frametitle{Expectations}
+	\begin{itemize}\itemsep=20pt
+		\item Blocking is only useful for larger scene sizes
+		\begin{itemize}
+			\item But that decreases coherence between rays
+		\end{itemize}
+
+		\item Divergence is much higher than N-Body problems (more difficult to keep coherent blocks)
+		\begin{itemize}
+			\item Solved by other algorithms (e.g. Coherent Path Tracing)
+		\end{itemize}
+
+		\item Blocks require too much temporary data $\Rightarrow$ Increased ray size, and blocks possibly too small to achieve improvements;
+
+		\item Original work had speedups around 10\%;
+	\end{itemize}
+}

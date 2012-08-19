@@ -1,1 +1,1 @@
-app(barneshut)
+app(barneshutbasic)

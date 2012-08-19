@@ -1,0 +1,32 @@
+\subsection{Ray Tracer (RT)}
+\label{sec:cases:ray}
+
+This was the most different and challenging test case to implement. The original source code, ``\textit{smallpt: Global Illumination in 99 lines of C++}'', is explained and available in \cite{99lines}.
+
+The original implementation of \smallpt relied on OpenMP to distribute workload accross threads. The workload consisted in the pixels, meaning that each thread would be responsible for a subset of the total pixels of the image. For each pixel, the corresponding thread would launch a given number of rays (given as a parameter) using Monte Carlo to add some randomness to their direction. Each ray was then checked against the entire list of objects composing the scene, which was implemented as a naive vector of spheres \footnote{\smallpt was optimized for code size, not speed. All objects were simply spheres (even the walls), and no acceleration structure was provided, minimizing the amount of code}.
+
+After each collision, one or more subrays might be generated, depending on the properties of the object with which the ray collided. The ray might generate a reflected or refracted ray, or a combination of both. After the path of rays reaches a given depth (also given as a parameter), Russian Roulette was employed to decide whether to stop the path. Each ray computes a contribution to the pixel it belongs to, which is inversely proportional to the depth of the ray.
+
+\subsubsection{New Parallelization Strategy}
+\label{sec:cases:ray:strat}
+
+To use the ray tracer in a way that could favor the locality improvements shown here, a different parallelization strategy was required. The main reason for this is that, to better exploit geometrical proximity, it is better for all threads to share the processing of the same pixel, instead of processing rays from different pixels, that consequently are more apart from each other.
+
+Also, since at each new depth level, rays are completely unsorted due to the high divergence that is natural from Ray Tracing algorithms, it is useful to allow the rays to be sorted again and the blocks reorganized. This could also be done with the initial parallelization approach, however, it would require each ray to keep an even larger amount of auxiliary data, such as the pixel it belongs to, increasing memory footprint, and hurting locality.
+This new strategy is only possible if we assume that the implementation only provides acceptable results with a very high number of samples per pixel (values lower than 10000 result in to much noise in the final result), so that they can be split across enough blocks and threads.
+
+To account for the high divergence when compared to the more regular N-Body problems of the previous test cases, a two step sort is done here. First, the entire set of rays is spatially sorted by their origin point. This ensures that all rays within a block are as much close as possible. But this won't prove useful for cases where two rays start roughly at the same origin point, but have completely different directions, since their traversal path will still be different. For this, a second spatial sort is done, now for each block (blocks are nothing more than pointers to a subset of the global ray list), and this time using ray direction as the key.
+This way, when a block diverges during the traversal, it is more likely that there will only be a small number of breaking points in the block, rather than having random block elements to go to each traversal.
+
+Upon a collision, the ray will update its contribution and weight to the final pixel result, and its position and direction will be updated to reflect the newly created ray, if necessary. A final reduction is done on the entire set of rays to compute the final value for the pixel.
+
+\subsubsection{Expectations}
+
+During the development of this test case, it was noted that not only the irregularity was likely much higher than in the other samples, hindering improvements. The amount of extra auxiliary data required to keep track of all collision information during the traversal is also much higher.
+
+Another fact that limits improvements is that this problem deals with two particular items: rays and objects on the scene, where only the objects are indexed into an acceleration structure. In both Barnes-Hut and Point Correlation, the items traversing the structure were the points themselves, which reduces memory footprint. Here, a list of rays is accessing a different set of items, the objects in the scene.
+
+This should probably translate to a smaller ideal block size for this particular problem, but that may itself be a problem, as that block size may also be too small for any substantial gain. 
+
+
+%It should be noted that there are other proven methods of optimizing a ray tracer, that provide better speed improvements and are not compatible

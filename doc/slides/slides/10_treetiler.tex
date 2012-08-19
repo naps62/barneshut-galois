@@ -1,0 +1,22 @@
+% TODO da minha parte esta feito
+
+\frame{
+	\frametitle{TreeTiler}
+
+	\begin{itemize}\itemsep=20pt
+		\item Transformation Framework proposed by Milind Kulkarni and Yougjoon Jo on \textit{``Enchancing Locality for Recursive Traversals of Recursive Structures''};
+		
+		\item Uses JastAdd to refactor Java code at compile time;
+
+		\item Automatically identifies recursive structures, and applies optimizations to how the traversal is done, to exploit locality;
+
+		\item AutoTuner to determine optimal parameters:
+		\begin{itemize}
+			\item Parameters are dependent of hardware, algorithm and input;
+			% NOTE: machine details:   cache size
+			% NOTE: algorithm details: optimal block size for barnes-hut is different than for ray tracer
+			% NOTE: input dependency:  ray tracer with too few spheres will not benefit from blocking at all
+			\item AutoTuner at runtime finds best parameters;
+		\end{itemize}
+	\end{itemize}
+}

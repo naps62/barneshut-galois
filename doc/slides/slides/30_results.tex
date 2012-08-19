@@ -1,0 +1,24 @@
+\begin{frame}
+	\frametitle{Speedups}
+	\begin{figure}
+		\includegraphics[width=.8\textwidth]{speedup.png}
+	\end{figure}
+
+	\begin{itemize}
+		\item Measured using \texttt{Galois::StatTimer};
+		\item Only the critical parts of the code were measured.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{L2 Cache Misses}
+	\begin{figure}
+		\includegraphics[width=.8\textwidth]{misses.png}
+	\end{figure}
+
+	\begin{itemize}
+		\item Measured using PAPI library, with the event \texttt{PAPI\_L2\_DCM};
+		\item Only the critical parts of the code were measured.
+	\end{itemize}
+	
+\end{frame}

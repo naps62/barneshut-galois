@@ -85,8 +85,11 @@ struct RayTrace {
 		Vec dir = cam.cx * (((sx + 0.5 + dirX)/2 + pixel.w) / img.width  - 0.5) + 
 					 cam.cy * (((sy + 0.5 + dirY)/2 + pixel.h) / img.height - 0.5) +
 					 cam.dir; 
+		//Vec dir = cam.cx * ((dirX + pixel.w) / img.width - 0.5) +
+		//			 cam.cy * ((dirY + pixel.h) / img.height - 0.5) +
+		//			 cam.dir;
 		
-		Ray result(cam.orig + result.dir * 140, dir.norm());
+		Ray result(cam.orig, dir.norm());
 		return result;
 	}
 
@@ -155,7 +158,9 @@ struct RayTrace {
 				abort();
 		}
 
-		return obj.emission + f.mult(radiance(childRay, depth, Xi) * weight);
+		Vec result = obj.emission + f.mult(radiance(childRay, depth, Xi) * weight);
+		//std::cout << depth << " " << result << " " << obj.rad << " " << f << " " << obj.emission << std::endl;
+		return result;
 	}
 
 	/**

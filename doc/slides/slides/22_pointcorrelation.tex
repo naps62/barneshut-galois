@@ -1,0 +1,42 @@
+\begin{frame}
+	\frametitle{Two Point Correlation}
+	\vfill
+	\begin{description}
+		\item[Type:] N-Body problem;
+		\item[Domain:] Points in space;
+		\item[Goal:] Count the pairs of points which lie within a given radius of each other;
+	\end{description}
+	\vfill
+	\begin{block}{Acceleration Structure}
+		\begin{itemize}
+			\item kD-Tree;
+			\item Exclude all the points in a cell if it is too far away;
+		\end{itemize}
+	\end{block}
+	\vfill
+\end{frame}
+
+\begin{frame}
+	\frametitle{Strategy}
+	\begin{itemize}\itemsep=20pt
+		\item Change in the tree traversal:
+		\begin{itemize}
+			\item[-] \textbf{Original approach}: The tree is analysed from the root for each point;
+			\item[-] \textbf{New approach}: The tree is analysed for a block of points at a time;
+		\end{itemize}
+		\item Spatial Sort the points by coordinates;
+		\item Reduction to compute the total sum of pairs found;
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{Expectations}
+	\begin{itemize}\itemsep=20pt
+		\item Fewer operations per point per node $\Rightarrow$ higher bandwidth requirements;
+		\begin{itemize}
+			\item The tiling transformation should reduce bus pressure;
+		\end{itemize}
+		\item Low amount of data per point $\Rightarrow$ larger blocks;
+		\item Original work attained maximum improvements around 200\%;
+	\end{itemize}
+\end{frame}

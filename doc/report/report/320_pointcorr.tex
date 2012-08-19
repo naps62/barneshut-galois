@@ -1,0 +1,10 @@
+\subsection{Two Point Correlation (PC)}
+\label{sec:cases:pointcorr}
+
+The Two Point Correlation algorithm is in many ways similar to the Barnes-Hut. This application counts the pairs of points in a space which rely within a given radius of each other. It differs from the previous example in the acceleration structure -- a kD-Tree -- and in the need for a reduction to sum the pairs counted for each point.
+
+Since this algorithm does not require any special data to be stored in the acceleration structure (the Barnes-Hut requires that each node gives an estimation of its internal data), a simpler structure may be used. A kD-tree is a binary tree: in each level, the points are ordered by one of the coordinates, and the median is placed as a divider. In the next level, another coordinate is used. This algorithm uses a kD-Tree to automatically exclude all the points in a given subspace if the closest point in the subspace is already too far away.
+
+Like with the Barnes-Hut, the sorting optimization was implemented using CGAL, and Point Blocking required a change in the tree traversal to accept a block of points at a time. At any node of the tree, if a point is too far way, it is excluded from the block.
+
+The total count of correlated pairs is obtained using a thread local accumulator (available in Galois), where each thread adds the count of the processed blocks.

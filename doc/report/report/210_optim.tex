@@ -1,0 +1,8 @@
+\subsection{Optimizations}
+\label{sec:optim}
+
+The techniques employed by \treetiler deal with the way a recursive structure is traversed. Even though it is commonly an irregular structure, some techniques can be applied to exploit locality when multiple traversals are done. In this report, the techniques used were the Spatial Sort and Point Blocking. An Auto Tuner is also added to the Java code by \treetiler. This Tuner tries to find the best parameters for the optimizations, which sometimes are input dependent and cannot be evaluated at compile time.
+
+\input{report/211_sorting}
+\input{report/212_blocking}
+\input{report/213_autotuner}

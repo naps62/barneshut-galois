@@ -31,7 +31,6 @@ inline int toInt(double x) {
 
 Config config;
 
-typedef std::vector<Ray> Rays;
 typedef std::vector<Object*> ObjectList;
 
 #include "scene.h"
